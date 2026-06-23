@@ -1,0 +1,17 @@
+package portfolio.example.im_cc.models;
+
+
+public enum InventoryCategory {
+    MELEE_WEAPON,
+    RANGED_WEAPON,
+    CUSTOM_AMMUNITION,
+    GRENADES_AND_EXPLOSIVES,
+    WEAPON_MODIFICATION,
+    ARMOUR,
+    FORCE_FIELDS,
+    CLOTHING_AND_PERSONAL_GEAR,
+    TOOLS,
+    AUGMETIC_REPLACEMENTS,
+    AUGMETIC,
+    BOOK
+}
