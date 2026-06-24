@@ -106,7 +106,7 @@ export default function LoginPage() {
                             <div style={{flex: 1, height: '1px', background: 'var(--border)'}}/>
                         </div>
 
-                        <a href="http://localhost:8081/oauth2/authorization/discord" style={{
+                        <a href={`${(process.env.REACT_APP_API_URL || 'http://localhost:8081/api').replace(/\/api$/, '')}/oauth2/authorization/discord`} style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                             padding: '14px 28px', textDecoration: 'none',
                             fontFamily: "'Barlow', sans-serif", fontSize: '12px', fontWeight: 600,

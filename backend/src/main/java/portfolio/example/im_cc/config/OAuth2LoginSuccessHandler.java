@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import portfolio.example.im_cc.models.AppUser;
 import portfolio.example.im_cc.repositories.AppUserRepository;
@@ -26,6 +27,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private final AppUserDetailsService uds;
     private final PasswordEncoder encoder;
     private final HttpSessionSecurityContextRepository contextRepo = new HttpSessionSecurityContextRepository();
+
+    @Value("${FRONTEND_URL:http://localhost:3000}")
+    private String frontendUrl;
 
     public OAuth2LoginSuccessHandler(AppUserRepository users, AppUserDetailsService uds, PasswordEncoder encoder) {
         this.users = users;
@@ -57,7 +61,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         SecurityContextHolder.setContext(ctx);
         contextRepo.saveContext(ctx, request, response);
 
-        getRedirectStrategy().sendRedirect(request, response, "http://localhost:3000/cabinet");
+        getRedirectStrategy().sendRedirect(request, response, frontendUrl + "/cabinet?auth=discord");
     }
 
     private AppUser findOrCreate(String discordId, String email, String username) {
