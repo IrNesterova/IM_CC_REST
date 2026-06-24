@@ -55,6 +55,9 @@ export default function SummaryPage() {
     const [webhookUrl, setWebhookUrl] = useState(() => localStorage.getItem('im_discord_webhook') || '');
     const effectiveWebhookUrl = user?.webhookUrl || webhookUrl;
     const [lastRoll, setLastRoll] = useState(null);
+    const [toastPos, setToastPos] = useState(null);
+    const toastRef = useRef(null);
+    const toastDragRef = useRef(false);
     const [rolling, setRolling] = useState(false);
     const [rollModal, setRollModal] = useState(null);
     const [rollMode, setRollMode] = useState('normal');
@@ -62,6 +65,9 @@ export default function SummaryPage() {
     const [rollModifier, setRollModifier] = useState(0);
     const [rollExtraDoS, setRollExtraDoS] = useState(0);
     const [rollResult, setRollResult] = useState(null);
+    const [rollPos, setRollPos] = useState(null);
+    const rollModalRef = useRef(null);
+    const rollDragRef = useRef(null);
     const [corruption, setCorruption] = useState(0);
     const [handedness, setHandedness] = useState('right');
     const [protection, setProtection] = useState(
@@ -493,6 +499,51 @@ export default function SummaryPage() {
         setRollModifier(0);
         setRollExtraDoS(0);
         setRollResult(null);
+        setRollPos(null);
+    };
+
+    const onRollHeaderMouseDown = (e) => {
+        if (e.button !== 0) return;
+        const modal = rollModalRef.current;
+        if (!modal) return;
+        const rect = modal.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+        rollDragRef.current = true;
+        const onMove = (me) => {
+            setRollPos({x: me.clientX - offsetX, y: me.clientY - offsetY});
+        };
+        const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            setTimeout(() => { rollDragRef.current = false; }, 0);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        e.preventDefault();
+    };
+
+    const onToastMouseDown = (e) => {
+        if (e.button !== 0) return;
+        const toast = toastRef.current;
+        if (!toast) return;
+        const rect = toast.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+        let moved = false;
+        const onMove = (me) => {
+            moved = true;
+            setToastPos({x: me.clientX - offsetX, y: me.clientY - offsetY});
+        };
+        const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            toastDragRef.current = moved;
+            setTimeout(() => { toastDragRef.current = false; }, 0);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        e.preventDefault();
     };
 
     const chooseBetter = (a, b, target) => {
@@ -1606,15 +1657,18 @@ export default function SummaryPage() {
             {/* ── Roll modal ── */}
             {rollModal && (
                 <div className="roll-overlay" onClick={e => {
-                    if (e.target === e.currentTarget) setRollModal(null);
+                    if (e.target === e.currentTarget && !rollDragRef.current) setRollModal(null);
                 }}>
-                    <div className="roll-modal">
-                        <div className="roll-modal-header">
+                    <div className="roll-modal" ref={rollModalRef}
+                         style={rollPos ? {position: 'fixed', left: rollPos.x, top: rollPos.y, margin: 0} : {}}>
+                        <div className="roll-modal-header" style={{cursor: 'grab'}}
+                             onMouseDown={onRollHeaderMouseDown}>
                             <div className="roll-modal-title">{rollModal.label}</div>
                             <div
                                 className="roll-modal-target">Target: <strong>{(rollModal.target || 0) + rollModifier}</strong>
                             </div>
-                            <button className="roll-modal-close" onClick={() => setRollModal(null)}>×</button>
+                            <button className="roll-modal-close" onClick={() => setRollModal(null)}
+                                    onMouseDown={e => e.stopPropagation()}>×</button>
                         </div>
 
                         <div className="roll-modal-body">
@@ -1720,7 +1774,10 @@ export default function SummaryPage() {
             {lastRoll && (
                 <div
                     className={`roll-toast${lastRoll.crit ? ' crit' : lastRoll.fumble ? ' fumble' : lastRoll.success === true ? ' success' : lastRoll.success === false ? ' failure' : ''}`}
-                    onClick={() => setLastRoll(null)}>
+                    ref={toastRef}
+                    onMouseDown={onToastMouseDown}
+                    onClick={() => { if (!toastDragRef.current) setLastRoll(null); }}
+                    style={toastPos ? {bottom: 'auto', right: 'auto', left: toastPos.x, top: toastPos.y, cursor: 'grab'} : {cursor: 'grab'}}>
                     {lastRoll.label && <div className="rt-label">{lastRoll.label}</div>}
                     <div className="rt-value">{lastRoll.value}</div>
                     {lastRoll.target !== null && (
