@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE = 'http://localhost:8081/api';
+const BASE = process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8081/api');
 
 const api = axios.create({baseURL: BASE, withCredentials: true, xsrfCookieName: 'XSRF-TOKEN', xsrfHeaderName:'X-XSRF-TOKEN',});
 
