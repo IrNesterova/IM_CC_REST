@@ -1,6 +1,6 @@
 import {useEffect, useState, useMemo, useCallback, useRef} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {buildSummary, saveCharacter, loadCharacter, uploadCharacterImage, characterImageUrl, getPsychicDisciplines, getInjuries, lookupCriticalWound, getConditions} from '../api/api';
+import {buildSummary, saveCharacter, loadCharacter, getPsychicDisciplines, getInjuries, lookupCriticalWound, getConditions} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
 import {useAuth} from '../context/AuthContext';
 import Topbar from '../components/Topbar';
@@ -49,9 +49,6 @@ export default function SummaryPage() {
     const [extraSpecs, setExtraSpecs] = useState([]);
     const [openSpecSkill, setOpenSpecSkill] = useState(null);
     const [customSpecText, setCustomSpecText] = useState('');
-    const [charImageUrl, setCharImageUrl] = useState(null);
-    const [imageUploading, setImageUploading] = useState(false);
-    const [imageError, setImageError] = useState(null);
     const [webhookUrl, setWebhookUrl] = useState(() => localStorage.getItem('im_discord_webhook') || '');
     const effectiveWebhookUrl = user?.webhookUrl || webhookUrl;
     const [lastRoll, setLastRoll] = useState(null);
@@ -423,28 +420,10 @@ export default function SummaryPage() {
             const payload = JSON.stringify({ccm, edits: {characterName: charName}});
             const result = await saveCharacter(payload, saveCode);
             setSaveCode(result.code);
-            setCharImageUrl(characterImageUrl(result.code));
         } catch (e) {
             console.error(e);
         } finally {
             setSaving(false);
-        }
-    };
-
-    const handleImageUpload = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file || !saveCode) return;
-        setImageUploading(true);
-        setImageError(null);
-        try {
-            await uploadCharacterImage(saveCode, file);
-            setCharImageUrl(characterImageUrl(saveCode) + '?t=' + Date.now());
-        } catch (err) {
-            const msg = err.response?.data?.error || 'Upload failed';
-            setImageError(msg);
-        } finally {
-            setImageUploading(false);
-            e.target.value = '';
         }
     };
 
@@ -605,24 +584,7 @@ export default function SummaryPage() {
             const webhookBody = {embeds: [embed]};
             if (charName) webhookBody.username = charName;
 
-            if (charImageUrl) {
-                // Send image as file attachment so it works on localhost too
-                try {
-                    const blob = await fetch(charImageUrl.split('?')[0], {credentials: 'include'}).then(r => r.blob());
-                    const ext = blob.type.split('/')[1] || 'png';
-                    const filename = `portrait.${ext}`;
-                    embed.thumbnail = {url: `attachment://${filename}`};
-                    const form = new FormData();
-                    form.append('files[0]', blob, filename);
-                    form.append('payload_json', JSON.stringify(webhookBody));
-                    await fetch(effectiveWebhookUrl, {method: 'POST', body: form});
-                } catch {
-                    // fallback: send without image
-                    await fetch(effectiveWebhookUrl, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(webhookBody)});
-                }
-            } else {
-                await fetch(effectiveWebhookUrl, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(webhookBody)});
-            }
+            await fetch(effectiveWebhookUrl, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(webhookBody)});
         } catch (e) {
             console.error('Discord webhook error:', e);
         } finally {
@@ -681,24 +643,6 @@ export default function SummaryPage() {
                     {/* ── CHARACTER HEADER ── */}
                     <div className="char-header">
                         <div className="char-header-top">
-                            <div className="char-portrait-wrap">
-                                {charImageUrl && (
-                                    <img
-                                        src={charImageUrl}
-                                        alt="Character portrait"
-                                        className="char-portrait"
-                                        onError={() => setCharImageUrl(null)}
-                                    />
-                                )}
-                                {saveCode && (
-                                    <label className="portrait-upload-btn" title={charImageUrl ? 'Change portrait' : 'Upload portrait'}>
-                                        {imageUploading ? '…' : charImageUrl ? '✎' : '+'}
-                                        <input type="file" accept="image/*" style={{display: 'none'}}
-                                               disabled={imageUploading}
-                                               onChange={handleImageUpload}/>
-                                    </label>
-                                )}
-                            </div>
                             <div className="char-header-name-wrap">
                                 <div className="char-header-eyebrow">Character Sheet</div>
                                 <input className="char-header-name" value={charName}
