@@ -1,5 +1,6 @@
 package portfolio.example.im_cc.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import portfolio.example.im_cc.services.AppUserDetailsService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -24,12 +26,18 @@ public class SecurityConfig {
 
     private final OAuth2LoginSuccessHandler oAuth2SuccessHandler;
 
+    @Value("${FRONTEND_URL:}")
+    private String frontendUrl;
+
     public SecurityConfig(OAuth2LoginSuccessHandler oAuth2SuccessHandler) {
         this.oAuth2SuccessHandler = oAuth2SuccessHandler;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        String loginFailureUrl = (frontendUrl != null && !frontendUrl.isBlank()
+                ? frontendUrl : "http://localhost:3000") + "/login?error=discord";
+
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
@@ -41,7 +49,7 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth -> oauth
                         .successHandler(oAuth2SuccessHandler)
-                        .failureUrl("http://localhost:3000/login?error=discord")
+                        .failureUrl(loginFailureUrl)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/me/**").authenticated()
@@ -59,13 +67,24 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        List<String> origins = new ArrayList<>(List.of(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://localhost",
+                "http://localhost:80"
+        ));
+        if (frontendUrl != null && !frontendUrl.isBlank()) {
+            origins.add(frontendUrl);
+        }
+
         CorsConfiguration c = new CorsConfiguration();
-        c.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
+        c.setAllowedOrigins(origins);
         c.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         c.setAllowedHeaders(List.of("*"));
         c.setAllowCredentials(true);
+
         var source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", c);
+        source.registerCorsConfiguration("/**", c);
         return source;
     }
 }
