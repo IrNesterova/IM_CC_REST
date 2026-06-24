@@ -169,8 +169,6 @@ export default function FactionsPage() {
         navigate('/roles');
     };
 
-    if (!selected) return null;
-
     if (loading) return (
         <><ProgressBar/><Topbar/>
             <div style={{display:'flex',justifyContent:'center',alignItems:'center',minHeight:'60vh',color:'var(--muted)',fontFamily:"'Barlow',sans-serif",fontSize:'13px',letterSpacing:'3px'}}>
@@ -178,6 +176,8 @@ export default function FactionsPage() {
             </div>
         </>
     );
+
+    if (!selected) return null;
 
     return (
         <>
