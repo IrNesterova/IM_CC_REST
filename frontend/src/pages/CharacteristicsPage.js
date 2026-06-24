@@ -14,6 +14,7 @@ export default function CharacteristicsPage() {
     const [chars, setChars] = useState([]);
     const [values, setValues] = useState({});
     const [mode, setMode] = useState('manual');
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const {ccm, dispatch} = useCharacter();
 
@@ -25,7 +26,7 @@ export default function CharacteristicsPage() {
                 init[c.name] = ccm.characteristics[c.name] || String(MIN_VAL);
             });
             setValues(init);
-        });
+        }).finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const remaining = POOL_TOTAL - chars.reduce((s, c) => s + (parseInt(values[c.name] || 0) - BASE_VAL), 0);
@@ -61,6 +62,14 @@ export default function CharacteristicsPage() {
         dispatch({type: 'SET_CHARACTERISTICS', payload: values});
         navigate('/origins');
     };
+
+    if (loading) return (
+        <><ProgressBar/><Topbar/>
+            <div style={{display:'flex',justifyContent:'center',alignItems:'center',minHeight:'60vh',color:'var(--muted)',fontFamily:"'Barlow',sans-serif",fontSize:'13px',letterSpacing:'3px'}}>
+                Loading characteristics…
+            </div>
+        </>
+    );
 
     return (
         <>

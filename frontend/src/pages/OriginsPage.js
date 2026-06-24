@@ -9,6 +9,7 @@ export default function OriginsPage() {
     const [origins, setOrigins] = useState([]);
     const [selected, setSelected] = useState(null);
     const [secondaryChar, setSecondaryChar] = useState('');
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const {ccm, dispatch} = useCharacter();
 
@@ -19,7 +20,7 @@ export default function OriginsPage() {
                 const saved = ccm.originId ? data.find(o => o.id === ccm.originId) : null;
                 setSelected(saved || data[0]);
             }
-        });
+        }).finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
@@ -73,6 +74,14 @@ export default function OriginsPage() {
         });
         navigate('/factions');
     };
+
+    if (loading) return (
+        <><ProgressBar/><Topbar/>
+            <div style={{display:'flex',justifyContent:'center',alignItems:'center',minHeight:'60vh',color:'var(--muted)',fontFamily:"'Barlow',sans-serif",fontSize:'13px',letterSpacing:'3px'}}>
+                Loading origins…
+            </div>
+        </>
+    );
 
     return (
         <>

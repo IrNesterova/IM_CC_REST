@@ -8,6 +8,7 @@ import ProgressBar from '../components/ProgressBar';
 export default function RolesPage() {
     const [roles, setRoles] = useState([]);
     const [selected, setSelected] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [roleChoices, setRoleChoices] = useState({});
     const [roleSkillAdv, setRoleSkillAdv] = useState({});
     const [roleSpecAdv, setRoleSpecAdv] = useState({});
@@ -30,7 +31,7 @@ export default function RolesPage() {
                     selectRole(data[0]);
                 }
             }
-        });
+        }).finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const selectRole = (role) => {
@@ -126,6 +127,14 @@ export default function RolesPage() {
     const packChosen = !!ccm.equipmentPackId;
 
     if (!selected) return null;
+
+    if (loading) return (
+        <><ProgressBar/><Topbar/>
+            <div style={{display:'flex',justifyContent:'center',alignItems:'center',minHeight:'60vh',color:'var(--muted)',fontFamily:"'Barlow',sans-serif",fontSize:'13px',letterSpacing:'3px'}}>
+                Loading roles…
+            </div>
+        </>
+    );
 
     return (
         <>

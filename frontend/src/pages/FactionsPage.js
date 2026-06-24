@@ -8,6 +8,7 @@ import ProgressBar from '../components/ProgressBar';
 export default function FactionsPage() {
     const [factions, setFactions] = useState([]);
     const [packs, setPacks] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState(null);
     const [secondaryCharId, setSecondaryCharId] = useState('');
     const [skillAdvances, setSkillAdvances] = useState({});
@@ -66,7 +67,8 @@ export default function FactionsPage() {
                     setEquipTab('pack');
                 }
             })
-            .catch(err => console.error('Failed to load factions/packs:', err));
+            .catch(err => console.error('Failed to load factions/packs:', err))
+            .finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const resetForFaction = (f) => {
@@ -168,6 +170,14 @@ export default function FactionsPage() {
     };
 
     if (!selected) return null;
+
+    if (loading) return (
+        <><ProgressBar/><Topbar/>
+            <div style={{display:'flex',justifyContent:'center',alignItems:'center',minHeight:'60vh',color:'var(--muted)',fontFamily:"'Barlow',sans-serif",fontSize:'13px',letterSpacing:'3px'}}>
+                Loading factions…
+            </div>
+        </>
+    );
 
     return (
         <>
