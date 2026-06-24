@@ -9,7 +9,10 @@ export function AuthProvider({children}) {
     const [user, setUser] = useState(() => {
         try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
     });
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(() => {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('auth') === 'discord';
+    });
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
