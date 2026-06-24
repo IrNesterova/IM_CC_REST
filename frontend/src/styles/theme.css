@@ -2421,6 +2421,194 @@ footer {
 }
 
 /* ─────────────────────────────────────────────────────────
+   CONDITIONS
+───────────────────────────────────────────────────────── */
+.print-ghost-row {
+    display: none;
+}
+
+.cond-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 7px;
+    background: rgba(var(--accent-rgb), 0.05);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    font-size: 12px;
+    position: relative;
+    cursor: default;
+    user-select: none;
+}
+
+.cond-chip[data-desc]:not([data-desc=""]):hover::after {
+    content: attr(data-desc);
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 260px;
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 7px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    font-family: 'Barlow', sans-serif;
+    z-index: 500;
+    pointer-events: none;
+    white-space: pre-line;
+    text-align: left;
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.cond-chip.cond-chip-active {
+    border-color: var(--red, #c94040);
+    background: rgba(180, 40, 40, 0.08);
+    color: var(--red, #c94040);
+    font-weight: 600;
+}
+
+.cond-chip-name {
+    white-space: nowrap;
+}
+
+.cond-cb {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+}
+
+.cond-sev-badge {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--red, #c94040);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   CRITICAL WOUND TABLE
+───────────────────────────────────────────────────────── */
+.crit-wound-table td {
+    vertical-align: top;
+    padding: 3px 4px;
+}
+
+.crit-cell-textarea {
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    min-height: unset;
+    outline: none;
+    display: block;
+}
+
+/* ─────────────────────────────────────────────────────────
+   CRITICAL WOUND LOOKUP
+───────────────────────────────────────────────────────── */
+.crit-lookup-bar {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 4px 0 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+}
+
+.crit-lookup-select {
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    background: var(--field-bg);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 3px 6px;
+    outline: none;
+}
+
+.crit-lookup-roll {
+    width: 56px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+    background: var(--field-bg);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 3px 6px;
+    outline: none;
+    text-align: center;
+}
+
+.crit-lookup-result {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+}
+
+.crit-lookup-title {
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.crit-fatal-badge {
+    font-size: 9px;
+    background: var(--red);
+    color: var(--on-accent);
+    padding: 1px 5px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.crit-lookup-effect {
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.crit-lookup-injury {
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+.crit-lookup-add-btn {
+    margin-top: 6px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 3px 8px;
+    cursor: pointer;
+}
+
+.crit-lookup-add-btn:hover {
+    border-color: var(--red);
+    color: var(--red);
+}
+
+/* ─────────────────────────────────────────────────────────
    PRINT
 ───────────────────────────────────────────────────────── */
 @media print {
@@ -2475,8 +2663,19 @@ footer {
     .roll-toast,
     .dice-cell,
     .discord-row,
-    .portrait-upload-btn {
+    .portrait-upload-btn,
+    .bug-report-float,
+    .no-print {
         display: none !important;
+    }
+
+    .print-ghost-row {
+        display: table-row !important;
+    }
+
+    .print-ghost-row td {
+        height: 22px;
+        border-bottom: 1px solid #ccc;
     }
 
     .char-header::before,

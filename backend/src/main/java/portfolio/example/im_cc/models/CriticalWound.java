@@ -29,8 +29,14 @@ public class CriticalWound {
     @Column(columnDefinition = "text", nullable = false)
     private String effect;
 
+    // Текстовое описание травмы из книги (оставляем для отображения)
     @Column(columnDefinition = "text")
     private String injury;
+
+    // FK на справочник Injury (nullable — не у всех ран есть именованная травма)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "injury_id")
+    private Injury linkedInjury;
 
     @Column(columnDefinition = "text")
     private String treatment;
@@ -58,6 +64,9 @@ public class CriticalWound {
 
     public String getInjury() { return injury; }
     public void setInjury(String injury) { this.injury = injury; }
+
+    public Injury getLinkedInjury() { return linkedInjury; }
+    public void setLinkedInjury(Injury linkedInjury) { this.linkedInjury = linkedInjury; }
 
     public String getTreatment() { return treatment; }
     public void setTreatment(String treatment) { this.treatment = treatment; }

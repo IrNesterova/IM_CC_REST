@@ -1,6 +1,6 @@
-import {useEffect, useState, useMemo, useCallback} from 'react';
+import {useEffect, useState, useMemo, useCallback, useRef} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {buildSummary, saveCharacter, loadCharacter, uploadCharacterImage, characterImageUrl, getPsychicDisciplines} from '../api/api';
+import {buildSummary, saveCharacter, loadCharacter, uploadCharacterImage, characterImageUrl, getPsychicDisciplines, getInjuries, lookupCriticalWound, getConditions} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
 import {useAuth} from '../context/AuthContext';
 import Topbar from '../components/Topbar';
@@ -67,8 +67,23 @@ export default function SummaryPage() {
     const [protection, setProtection] = useState(
         PROTECT_LOCS.reduce((a, l) => ({...a, [l]: {ap: 0, special: '', wt: ''}}), {})
     );
-    const [critTable, setCritTable] = useState(Array(6).fill(null).map(() => ({loc: '', effect: '', val: ''})));
-    const [injuries, setInjuries] = useState(Array(5).fill(null).map(() => ({loc: '', desc: '', effect: ''})));
+    const [critTable, setCritTable] = useState([]);
+    useEffect(() => {
+        const count = critTable.filter(r => {
+            const t = (r.treatment || '').trim().toLowerCase();
+            return t && t !== 'none required.';
+        }).length;
+        setCritWounds(count);
+    }, [critTable]);
+    const [injuries, setInjuries] = useState([]);
+    const [allInjuries, setAllInjuries] = useState([]);
+    const [allConditions, setAllConditions] = useState([]);
+    // {[name]: 'minor' | 'major' | 'active'}
+    const [activeConditions, setActiveConditions] = useState({});
+    const [critLookupLoc, setCritLookupLoc] = useState('HEAD');
+    const [critLookupRoll, setCritLookupRoll] = useState('');
+    const [critLookupResult, setCritLookupResult] = useState(null);
+    const [critLookupLoading, setCritLookupLoading] = useState(false);
     const [influence, setInfluence] = useState([{faction: '', infl: '', notes: ''}, {
         faction: '',
         infl: '',
@@ -106,6 +121,8 @@ export default function SummaryPage() {
             })
             .catch(() => {})
             .finally(() => setLoading(false));
+        getInjuries().then(inj => setAllInjuries(inj || [])).catch(() => {});
+        getConditions().then(c => setAllConditions(c || [])).catch(() => {});
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
@@ -212,8 +229,8 @@ export default function SummaryPage() {
         setLongGoal(sheet.longTermGoal || '');
         setInfluence(prev => {
             const n = [...prev];
-            if (sheet.factionName) n[0] = {...n[0], faction: sheet.factionName};
-            return n;
+            if (sheet.factionName) n[0] = {...n[0], faction: sheet.factionName, infl: n[0].infl || '1'};
+            return n.map(r => r.faction?.trim() && !r.infl ? {...r, infl: '1'} : r);
         });
     }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -367,6 +384,30 @@ export default function SummaryPage() {
     const addAugmetic = (name) => {
         if (!name.trim()) return;
         setAugmetics(prev => [...prev, {name, notes: ''}]);
+    };
+
+    const addInjuryFromSearch = (name) => {
+        const inj = allInjuries.find(i => i.name === name);
+        if (!inj) {
+            setInjuries(prev => [...prev, {loc: '', desc: name, effect: ''}]);
+            return;
+        }
+        setInjuries(prev => [...prev, {loc: inj.affectedPart || '', desc: inj.name, effect: inj.effect || ''}]);
+    };
+
+    const doCritLookup = async () => {
+        const roll = parseInt(critLookupRoll);
+        if (!roll || roll < 1) return;
+        setCritLookupLoading(true);
+        setCritLookupResult(null);
+        try {
+            const result = await lookupCriticalWound(critLookupLoc, roll);
+            setCritLookupResult(result);
+        } catch {
+            setCritLookupResult({error: true});
+        } finally {
+            setCritLookupLoading(false);
+        }
     };
 
     // ── Save ──────────────────────────────────────────────────────
@@ -779,42 +820,6 @@ export default function SummaryPage() {
                                 </div>
                             </div>
 
-                            {/* Augmentics */}
-                            <div className="sec-body" style={{borderTop: '1px solid var(--border)'}}>
-                                <div className="id-label" style={{marginBottom: '4px'}}>Augmentics</div>
-                                <table className="data-table">
-                                    <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Notes / Location</th>
-                                        <th style={{width: '24px'}}></th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {augmetics.map((a, i) => (
-                                        <tr key={i}>
-                                            <td><input type="text" value={a.name}
-                                                       onChange={e => setAugmetics(p => p.map((x, j) => j === i ? {
-                                                           ...x,
-                                                           name: e.target.value
-                                                       } : x))}/></td>
-                                            <td><input type="text" value={a.notes}
-                                                       onChange={e => setAugmetics(p => p.map((x, j) => j === i ? {
-                                                           ...x,
-                                                           notes: e.target.value
-                                                       } : x))}/></td>
-                                            <td style={{textAlign: 'center', padding: '2px'}}>
-                                                <button className="tag-remove-btn"
-                                                        onClick={() => setAugmetics(p => p.filter((_, j) => j !== i))}>×
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                                <AcAddRow placeholder="Search augmetics…" options={data.allAugmeticNames || []}
-                                          onAdd={addAugmetic}/>
-                            </div>
                         </div>
 
                         {/* Influence */}
@@ -1142,7 +1147,7 @@ export default function SummaryPage() {
                                     </thead>
                                     <tbody>
                                     {weaponRows.map((r, i) => (
-                                        <tr key={i}>
+                                        <tr key={`w${i}`}>
                                             <td style={{textAlign: 'center', padding: '2px'}}>
                                                 {r.name && r.test && (
                                                     <span className="weapon-roll-trigger rollable"
@@ -1171,12 +1176,13 @@ export default function SummaryPage() {
                                             </td>
                                         </tr>
                                     ))}
+                                    <GhostRows count={Math.max(0, 5 - weaponRows.length)} cols={9}/>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
-                        {/* Protection + Critical Wounds side by side */}
+                        {/* Protection + Conditions */}
                         <div className="two-col-panels">
                             <div className="panel-half">
                                 <div className="panel-half-title">Protection</div>
@@ -1214,27 +1220,118 @@ export default function SummaryPage() {
                                 </table>
                             </div>
                             <div className="panel-half">
-                                <div className="panel-half-title">Critical Wounds</div>
-                                <table className="data-table">
+                                <div className="panel-half-title">Conditions <span style={{fontFamily:"'Barlow',sans-serif",fontSize:'10px',textTransform:'none',letterSpacing:0,color:'var(--muted)',fontStyle:'italic'}}>hover for description</span></div>
+                                <div className="tag-cloud">
+                                    {allConditions.map(c => {
+                                        const st = activeConditions[c.name] || {};
+                                        const isActive = st.minor || st.major;
+                                        const toggle = (key, e) => { e.stopPropagation(); setActiveConditions(p => { const prev = p[c.name] || {}; const newVal = !prev[key]; let next = {...prev, [key]: newVal}; if (key === 'major' && newVal) next.minor = true; if (key === 'minor' && !newVal) next.major = false; return {...p, [c.name]: next}; }); };
+                                        const tooltip = [c.description, c.minorEffect && `Minor: ${c.minorEffect}`, c.majorEffect && `Major: ${c.majorEffect}`, c.removal && `Remove: ${c.removal}`].filter(Boolean).join('\n\n');
+                                        const hasSeverity = c.minorEffect || c.majorEffect;
+                                        return (
+                                            <div key={c.name} className={`cond-chip${isActive ? ' cond-chip-active' : ''}`} data-desc={tooltip}>
+                                                <span className="cond-chip-name">{c.name}</span>
+                                                <input type="checkbox" className="cond-cb" checked={!!st.minor} onChange={e => toggle('minor', e)}/>
+                                                {hasSeverity && <input type="checkbox" className="cond-cb" checked={!!st.major} onChange={e => toggle('major', e)}/>}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Critical Wounds — full width */}
+                        <div className="sec-block">
+                            <div className="sec-hdr">Critical Wounds</div>
+                            <div className="sec-body">
+                                {/* Lookup bar */}
+                                <div className="crit-lookup-bar no-print">
+                                    <select className="crit-lookup-select" value={critLookupLoc}
+                                            onChange={e => { setCritLookupLoc(e.target.value); setCritLookupResult(null); }}>
+                                        {['HEAD', 'BODY', 'ARMS', 'LEGS'].map(l => <option key={l}>{l}</option>)}
+                                    </select>
+                                    <input className="crit-lookup-roll" type="number" min={1} max={99}
+                                           placeholder="Roll…" value={critLookupRoll}
+                                           onChange={e => { setCritLookupRoll(e.target.value); setCritLookupResult(null); }}
+                                           onKeyDown={e => e.key === 'Enter' && doCritLookup()}/>
+                                    <button className="action-btn secondary" style={{padding: '4px 10px', fontSize: '11px'}}
+                                            onClick={doCritLookup} disabled={critLookupLoading}>
+                                        {critLookupLoading ? '…' : 'Lookup'}
+                                    </button>
+                                </div>
+                                {critLookupResult && !critLookupResult.error && (
+                                    <div className="crit-lookup-result no-print">
+                                        <div className="crit-lookup-title">
+                                            {critLookupResult.title}
+                                            {critLookupResult.fatal && <span className="crit-fatal-badge">Fatal</span>}
+                                        </div>
+                                        <div className="crit-lookup-effect">{critLookupResult.effect}</div>
+                                        {critLookupResult.injury && (
+                                            <div className="crit-lookup-injury">Injury: {critLookupResult.injury}</div>
+                                        )}
+                                        {critLookupResult.treatment && (
+                                            <div className="crit-lookup-injury">Treatment: {critLookupResult.treatment}</div>
+                                        )}
+                                        <button className="crit-lookup-add-btn" onClick={() => {
+                                            const entry = `${critLookupResult.title} — ${critLookupResult.effect}`;
+                                            const treatment = critLookupResult.treatment || '';
+                                            const empty = critTable.findIndex(r => !r.loc && !r.effect);
+                                            if (empty !== -1) {
+                                                setCritTable(prev => prev.map((r, i) => i === empty
+                                                    ? {...r, loc: critLookupLoc, effect: entry, treatment}
+                                                    : r));
+                                            } else {
+                                                setCritTable(prev => [...prev, {loc: critLookupLoc, effect: entry, treatment, val: ''}]);
+                                            }
+                                            const li = critLookupResult.linkedInjury;
+                                            if (li) {
+                                                setInjuries(prev => [...prev, {
+                                                    loc: li.affectedPart || '',
+                                                    desc: li.name,
+                                                    effect: li.effect || ''
+                                                }]);
+                                            }
+                                            setCritLookupResult(null);
+                                            setCritLookupRoll('');
+                                        }}>+ Add to table</button>
+                                    </div>
+                                )}
+                                {critLookupResult?.error && (
+                                    <div className="crit-lookup-result no-print" style={{color: 'var(--muted)'}}>No result for roll {critLookupRoll}.</div>
+                                )}
+                                <table className="data-table crit-wound-table">
                                     <thead>
                                     <tr>
-                                        <th style={{width: '90px'}}>Location</th>
+                                        <th style={{width: '72px'}}>Location</th>
                                         <th>Effect / Notes</th>
-
+                                        <th style={{width: '140px'}}>Treatment</th>
+                                        <th style={{width: '24px'}}></th>
                                     </tr>
                                     </thead>
                                     <tbody>
                                     {critTable.map((r, i) => (
-                                        <tr key={i}>
-                                            <td><input type="text" value={r.loc}
+                                        <tr key={i} style={{verticalAlign: 'top'}}>
+                                            <td><input type="text" value={r.loc} placeholder="—"
                                                        onChange={e => updateCritRow(i, 'loc', e.target.value)}/></td>
-                                            <td><input type="text" value={r.effect}
-                                                       onChange={e => updateCritRow(i, 'effect', e.target.value)}/></td>
-
+                                            <td><AutoTextarea value={r.effect} placeholder="—"
+                                                              className="crit-cell-textarea"
+                                                              onChange={e => updateCritRow(i, 'effect', e.target.value)}/></td>
+                                            <td><AutoTextarea value={r.treatment || ''} placeholder="—"
+                                                              className="crit-cell-textarea"
+                                                              onChange={e => updateCritRow(i, 'treatment', e.target.value)}/></td>
+                                            <td style={{textAlign: 'center', padding: '2px'}}>
+                                                <button className="tag-remove-btn"
+                                                        onClick={() => setCritTable(prev => prev.filter((_, j) => j !== i))}>×</button>
+                                            </td>
                                         </tr>
                                     ))}
+                                    <GhostRows count={Math.max(0, 6 - critTable.length)} cols={4}/>
                                     </tbody>
                                 </table>
+                                <div className="no-print" style={{marginTop: '4px'}}>
+                                    <button className="action-btn secondary" style={{padding: '3px 10px', fontSize: '11px'}}
+                                            onClick={() => setCritTable(prev => [...prev, {loc: '', effect: '', treatment: '', val: ''}])}>+ Row</button>
+                                </div>
                             </div>
                         </div>
 
@@ -1245,33 +1342,43 @@ export default function SummaryPage() {
                                 <table className="data-table">
                                     <thead>
                                     <tr>
-                                        <th style={{width: '90px'}}>Location</th>
-                                        <th>Description</th>
-                                        <th style={{width: '120px'}}>Effect / Duration</th>
+                                        <th style={{width: '140px'}}>Injury</th>
+                                        <th style={{width: '80px'}}>Location</th>
+                                        <th>Effect</th>
+                                        <th style={{width: '24px'}}></th>
                                     </tr>
                                     </thead>
                                     <tbody>
                                     {injuries.map((r, i) => (
-                                        <tr key={i}>
-                                            <td><input type="text" value={r.loc}
-                                                       onChange={e => setInjuries(p => p.map((x, j) => j === i ? {
-                                                           ...x,
-                                                           loc: e.target.value
-                                                       } : x))}/></td>
+                                        <tr key={i} style={{verticalAlign: 'top'}}>
                                             <td><input type="text" value={r.desc}
                                                        onChange={e => setInjuries(p => p.map((x, j) => j === i ? {
                                                            ...x,
                                                            desc: e.target.value
                                                        } : x))}/></td>
-                                            <td><input type="text" value={r.effect}
+                                            <td><input type="text" value={r.loc}
                                                        onChange={e => setInjuries(p => p.map((x, j) => j === i ? {
                                                            ...x,
-                                                           effect: e.target.value
+                                                           loc: e.target.value
                                                        } : x))}/></td>
+                                            <td><AutoTextarea value={r.effect}
+                                                              className="crit-cell-textarea"
+                                                              onChange={e => setInjuries(p => p.map((x, j) => j === i ? {
+                                                                  ...x,
+                                                                  effect: e.target.value
+                                                              } : x))}/></td>
+                                            <td style={{textAlign: 'center', padding: '2px'}}>
+                                                <button className="tag-remove-btn"
+                                                        onClick={() => setInjuries(p => p.filter((_, j) => j !== i))}>×</button>
+                                            </td>
                                         </tr>
                                     ))}
+                                    <GhostRows count={Math.max(0, 5 - injuries.length)} cols={4}/>
                                     </tbody>
                                 </table>
+                                <AcAddRow placeholder="Search injuries…"
+                                          options={allInjuries.map(i => i.name)}
+                                          onAdd={addInjuryFromSearch}/>
                             </div>
                         </div>
 
@@ -1323,6 +1430,7 @@ export default function SummaryPage() {
                                             </td>
                                         </tr>
                                     ))}
+                                    <GhostRows count={Math.max(0, 10 - equipment.length)} cols={6}/>
                                     </tbody>
                                 </table>
                                 <AcAddRow placeholder="Search equipment…" options={data.allInventoryNames || []}
@@ -1362,6 +1470,39 @@ export default function SummaryPage() {
                                         />
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Augmentics */}
+                        <div className="sec-block">
+                            <div className="sec-hdr">Augmentics</div>
+                            <div className="sec-body">
+                                <table className="data-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Notes / Location</th>
+                                        <th style={{width: '24px'}}></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {augmetics.map((a, i) => (
+                                        <tr key={i}>
+                                            <td><input type="text" value={a.name}
+                                                       onChange={e => setAugmetics(p => p.map((x, j) => j === i ? {...x, name: e.target.value} : x))}/></td>
+                                            <td><input type="text" value={a.notes}
+                                                       onChange={e => setAugmetics(p => p.map((x, j) => j === i ? {...x, notes: e.target.value} : x))}/></td>
+                                            <td style={{textAlign: 'center', padding: '2px'}}>
+                                                <button className="tag-remove-btn"
+                                                        onClick={() => setAugmetics(p => p.filter((_, j) => j !== i))}>×</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    <GhostRows count={Math.max(0, 5 - augmetics.length)} cols={3}/>
+                                    </tbody>
+                                </table>
+                                <AcAddRow placeholder="Search augmetics…" options={data.allAugmeticNames || []}
+                                          onAdd={addAugmetic}/>
                             </div>
                         </div>
 
@@ -1592,6 +1733,30 @@ export default function SummaryPage() {
                 </div>
             )}
         </>
+    );
+}
+
+/* ── Auto-growing textarea ── */
+function GhostRows({count, cols}) {
+    if (count <= 0) return null;
+    return Array.from({length: count}, (_, i) => (
+        <tr key={`g${i}`} className="print-ghost-row">
+            {Array.from({length: cols}, (_, j) => <td key={j}>&nbsp;</td>)}
+        </tr>
+    ));
+}
+
+function AutoTextarea({value, onChange, className, placeholder}) {
+    const ref = useRef(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        ref.current.style.height = 'auto';
+        ref.current.style.height = ref.current.scrollHeight + 'px';
+    }, [value]);
+    return (
+        <textarea ref={ref} value={value} onChange={onChange}
+                  className={className} placeholder={placeholder}
+                  rows={1} style={{resize: 'none', overflow: 'hidden', width: '100%', boxSizing: 'border-box'}}/>
     );
 }
 

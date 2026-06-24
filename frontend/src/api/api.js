@@ -47,3 +47,12 @@ export const uploadCharacterImage = (code, file) => {
 export const characterImageUrl = (code) =>
     `http://localhost:8081/api/character/${code}/image`;
 
+export const getInjuries = () =>
+    api.get('/injuries').then(r => r.data);
+
+export const lookupCriticalWound = (location, roll) =>
+    api.get('/critical-wounds', {params: {location, roll}}).then(r => r.data);
+
+export const getConditions = () =>
+    api.get('/conditions').then(r => r.data);
+

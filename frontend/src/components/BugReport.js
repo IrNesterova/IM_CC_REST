@@ -24,7 +24,7 @@ export default function BugReport() {
     };
 
     return (
-        <>
+        <div className="bug-report-float">
             <button
                 onClick={() => setOpen(o => !o)}
                 style={{
@@ -73,6 +73,6 @@ export default function BugReport() {
                     )}
                 </div>
             )}
-        </>
+        </div>
     );
 }

@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/conditions_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/critical_wounds_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/critical_wounds_link_injuries.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/injuries_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/psychic_powers_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/ranged_weapon.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
