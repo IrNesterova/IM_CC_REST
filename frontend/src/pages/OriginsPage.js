@@ -36,6 +36,13 @@ export default function OriginsPage() {
         if (!selected) return;
 
         const chars = {...ccm.characteristics};
+        // undo previous origin bonuses before applying new ones
+        (ccm.originPrimaryCharNames || '').split(', ').filter(Boolean).forEach(name => {
+            if (chars[name]) chars[name] = String(parseInt(chars[name]) - 5);
+        });
+        if (ccm.originSecondaryCharName && chars[ccm.originSecondaryCharName]) {
+            chars[ccm.originSecondaryCharName] = String(parseInt(chars[ccm.originSecondaryCharName]) - 5);
+        }
 
         // Apply primary +5 bonuses
         const primaryNames = (selected.primaryCharacteristsics || []).map(c => c.name).join(', ');

@@ -17,11 +17,22 @@ export default function FactionsPage() {
     const [expandedPacks, setExpandedPacks] = useState({});
     const [expandedSkills, setExpandedSkills] = useState({});
     const [expandedTalents, setExpandedTalents] = useState({});
+    const [expandedModifiers, setExpandedModifiers] = useState({});
+    const [diceRolls, setDiceRolls] = useState({});
     const navigate = useNavigate();
     const {ccm, dispatch} = useCharacter();
 
     const MAX_SKILL_ADVANCES = 5;
     const MAX_PER_SKILL = 2;
+
+    const rollDice = (qty, key) => {
+        const match = qty.match(/(\d+)d(\d+)/i);
+        if (!match) return;
+        const [, count, sides] = match.map(Number);
+        let total = 0;
+        for (let i = 0; i < count; i++) total += Math.floor(Math.random() * sides) + 1;
+        setDiceRolls(r => ({...r, [key]: total}));
+    };
 
     useEffect(() => {
         Promise.all([getFactions(), getEquipmentPacks()])
@@ -36,7 +47,12 @@ export default function FactionsPage() {
                     setSelected(init);
                     if (saved) {
                         setSkillAdvances(ccm.factionSkillAdvances || {});
-                        setChoices(ccm.factionChoices || {});
+                        // normalise: values might be bare numbers from old saves
+                        const rawChoices = ccm.factionChoices || {};
+                        const normChoices = Object.fromEntries(
+                            Object.entries(rawChoices).map(([k, v]) => [k, Array.isArray(v) ? v : [v]])
+                        );
+                        setChoices(normChoices);
                         if (saved.secondaryCharacteristics?.length > 0) {
                             const sc = saved.secondaryCharacteristics.find(c => c.name === ccm.factionSecondaryCharName);
                             setSecondaryCharId(sc ? String(sc.id) : String(saved.secondaryCharacteristics[0].id));
@@ -80,6 +96,13 @@ export default function FactionsPage() {
     const handleSubmit = () => {
         if (!selected) return;
         const chars = {...ccm.characteristics};
+        // undo previous faction bonuses before applying new ones
+        (ccm.factionPrimaryCharNames || '').split(', ').filter(Boolean).forEach(name => {
+            if (chars[name]) chars[name] = String(parseInt(chars[name]) - 5);
+        });
+        if (ccm.factionSecondaryCharName && chars[ccm.factionSecondaryCharName]) {
+            chars[ccm.factionSecondaryCharName] = String(parseInt(chars[ccm.factionSecondaryCharName]) - 5);
+        }
 
         // Primary +5
         const primaryNames = (selected.primaryCharacteristics || []).map(c => c.name).join(', ');
@@ -111,13 +134,15 @@ export default function FactionsPage() {
 
         let inventoryNames = '';
         if (!chosenPack) {
-            const items = [...(selected.inventoryList || []).map(i => i.name)];
-            Object.entries(choices).forEach(([groupId, optId]) => {
+            const items = [...(selected.inventoryList || []).map(fi => fi.inventory?.name || fi.name)];
+            Object.entries(choices).forEach(([groupId, optIds]) => {
                 const group = (selected.choiceGroups || []).find(g => String(g.id) === String(groupId));
-                if (group) {
+                if (!group) return;
+                const ids = Array.isArray(optIds) ? optIds : [optIds];
+                ids.forEach(optId => {
                     const opt = (group.options || []).find(o => String(o.id) === String(optId));
                     if (opt) (opt.inventory || []).forEach(i => items.push(i.name));
-                }
+                });
             });
             inventoryNames = items.join(', ');
         }
@@ -394,8 +419,34 @@ export default function FactionsPage() {
                             {equipTab === 'standard' && (
                                 <div style={{marginTop: '12px'}}>
                                     {selected.inventoryList?.length > 0 && (
-                                        <div className="tag-list">{selected.inventoryList.map(i => <div key={i.id}
-                                                                                                        className="tag">{i.name}</div>)}</div>
+                                        <div className="tag-list">
+                                            {selected.inventoryList.map(fi => {
+                                                const name = fi.inventory?.name || fi.name;
+                                                const qty = fi.quantity && fi.quantity !== '1' ? fi.quantity : null;
+                                                const mods = fi.modifiers || [];
+                                                const isDice = qty && /\d+d\d+/i.test(qty);
+                                                const rollKey = `fi_${fi.id}`;
+                                                const rolled = diceRolls[rollKey];
+                                                return (
+                                                    <div key={fi.id} className="tag" style={{display:'flex', alignItems:'center', gap:'6px'}}>
+                                                        <span>{name}{qty && !isDice ? ` ×${qty}` : ''}</span>
+                                                        {isDice && (
+                                                            <span style={{display:'inline-flex', alignItems:'center', gap:'4px'}}>
+                                                                <button
+                                                                    className="dice-roll-btn"
+                                                                    onClick={() => rollDice(qty, rollKey)}
+                                                                    title={`Roll ${qty}`}
+                                                                >⚄ {qty}</button>
+                                                                {rolled != null && <span className="dice-roll-result">{rolled}</span>}
+                                                            </span>
+                                                        )}
+                                                        {mods.map(m => (
+                                                            <span key={m.id} className={`item-modifier item-modifier--${m.type}`}>{m.name}</span>
+                                                        ))}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     )}
                                     {selected.choiceGroups?.length > 0 && (
                                         <div style={{
@@ -404,7 +455,11 @@ export default function FactionsPage() {
                                             flexDirection: 'column',
                                             gap: '12px'
                                         }}>
-                                            {selected.choiceGroups.map(group => (
+                                            {selected.choiceGroups.map(group => {
+                                                const multi = group.choicesRequired > 1;
+                                                const selectedIds = Array.isArray(choices[group.id]) ? choices[group.id] : (choices[group.id] ? [choices[group.id]] : []);
+                                                const atLimit = selectedIds.length >= group.choicesRequired;
+                                                return (
                                                 <div key={group.id} className="choice-group">
                                                     <div style={{
                                                         color: 'var(--ink)',
@@ -412,29 +467,74 @@ export default function FactionsPage() {
                                                         lineHeight: '1.7',
                                                         padding: '14px 18px',
                                                         borderLeft: '2px solid var(--border-strong)'
-                                                    }}>Choose {group.choicesRequired} option(s):
+                                                    }}>Choose {group.choicesRequired}:
+                                                        {multi && <span style={{fontFamily:"'Barlow',sans-serif",fontSize:'13px',color:'var(--muted)',marginLeft:'8px'}}>{selectedIds.length}/{group.choicesRequired} selected</span>}
                                                     </div>
-                                                    {group.options.map(opt => (
-                                                        <label key={opt.id} className="choice-option">
-                                                            <input type="radio" name={`choiceGroup_${group.id}`}
-                                                                   value={opt.id} checked={choices[group.id] === opt.id}
-                                                                   onChange={() => setChoices(c => ({
-                                                                       ...c,
-                                                                       [group.id]: opt.id
-                                                                   }))} style={{
-                                                                marginTop: '3px',
-                                                                accentColor: 'var(--red)'
-                                                            }}/>
+                                                    {(() => {
+                                                        const groupMods = [...new Map(
+                                                            group.options.flatMap(o => o.modifiers || []).map(m => [m.id, m])
+                                                        ).values()];
+                                                        return groupMods.length > 0 && (
+                                                            <div style={{padding:'0 18px 12px'}}>
+                                                                <div style={{fontFamily:"'Barlow',sans-serif", fontSize:'13px', color:'var(--muted)', marginBottom:'6px'}}>chosen item gains:</div>
+                                                                <div style={{display:'flex', flexDirection:'column', gap:'6px'}}>
+                                                                    {groupMods.map(m => (
+                                                                        <div key={m.id} className="talent-card">
+                                                                            <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                                                                                <span className={`item-modifier item-modifier--${m.type}`} style={{marginLeft:0}}>{m.name}</span>
+                                                                                {m.description && (
+                                                                                    <button className="desc-toggle" onClick={() => setExpandedModifiers(p => ({...p, [m.id]: !p[m.id]}))}>
+                                                                                        {expandedModifiers[m.id] ? '▴' : '▾'}
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
+                                                                            {m.description && (
+                                                                                <div className={`talent-desc${expandedModifiers[m.id] ? ' open' : ''}`}>{m.description}</div>
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                    {group.options.map(opt => {
+                                                        const isChecked = selectedIds.includes(opt.id);
+                                                        const disabled = multi && !isChecked && atLimit;
+                                                        return (
+                                                        <label key={opt.id} className="choice-option" style={disabled ? {opacity:0.45} : undefined}>
+                                                            <input
+                                                                type={multi ? 'checkbox' : 'radio'}
+                                                                name={multi ? undefined : `choiceGroup_${group.id}`}
+                                                                value={opt.id}
+                                                                checked={multi ? isChecked : selectedIds.includes(opt.id)}
+                                                                disabled={disabled}
+                                                                onChange={() => {
+                                                                    if (multi) {
+                                                                        setChoices(c => {
+                                                                            const prev = Array.isArray(c[group.id]) ? c[group.id] : (c[group.id] ? [c[group.id]] : []);
+                                                                            const next = prev.includes(opt.id)
+                                                                                ? prev.filter(id => id !== opt.id)
+                                                                                : prev.length < group.choicesRequired ? [...prev, opt.id] : prev;
+                                                                            return {...c, [group.id]: next};
+                                                                        });
+                                                                    } else {
+                                                                        setChoices(c => ({...c, [group.id]: [opt.id]}));
+                                                                    }
+                                                                }}
+                                                                style={{marginTop: '3px', accentColor: 'var(--red)'}}
+                                                            />
                                                             <div className="choice-content">
-                                                                {opt.talents?.map(t => <div key={t.id}
-                                                                                            className="reward-line">• {t.name}</div>)}
-                                                                {opt.inventory?.map(i => <div key={i.id}
-                                                                                              className="reward-line">• {i.name}</div>)}
+                                                                {opt.talents?.map(t => <div key={t.id} className="reward-line">• {t.name}</div>)}
+                                                                {opt.inventory?.map(i => (
+                                                                    <div key={i.id} className="reward-line">• {i.name}</div>
+                                                                ))}
                                                             </div>
                                                         </label>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>

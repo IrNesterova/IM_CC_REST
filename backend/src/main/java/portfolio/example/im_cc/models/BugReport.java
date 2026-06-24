@@ -21,7 +21,7 @@ public class BugReport {
     @Column(columnDefinition = "text")
     private String name;
 
-    @Column(nullable = false, columnDefinition = "text")
+    @Column(columnDefinition = "text")
     private String title;
 
     @Column(nullable = false, updatable = false)

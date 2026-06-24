@@ -43,7 +43,14 @@ const initialState = {
 function reducer(state, action) {
     switch (action.type) {
         case 'SET_CHARACTERISTICS':
-            return {...state, characteristics: action.payload};
+            return {
+                ...state,
+                characteristics: action.payload,
+                originPrimaryCharNames: '',
+                originSecondaryCharName: '',
+                factionPrimaryCharNames: '',
+                factionSecondaryCharName: '',
+            };
         case 'SET_ORIGIN':
             return {
                 ...state,
@@ -53,6 +60,8 @@ function reducer(state, action) {
                 originPrimaryCharNames: action.payload.originPrimaryCharNames,
                 originSecondaryCharName: action.payload.originSecondaryCharName,
                 characteristics: action.payload.characteristics,
+                factionPrimaryCharNames: '',
+                factionSecondaryCharName: '',
             };
         case 'SET_FACTION':
             return {

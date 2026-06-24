@@ -25,12 +25,37 @@ public class CharacterSheetDTO {
     private List<String> equipment;
     private List<String> augmetics = new ArrayList<>();
     private List<SpecializationEntry> specializations = new ArrayList<>();
+    private List<InjuryEntry> injuries = new ArrayList<>();
+
+    private String startingMoney;
 
     private int fatePoints = 3;
 
     private String shortTermGoal;
     private String longTermGoal;
     private String connections;
+
+    public static class InjuryEntry {
+        private final String name;
+        private final String affectedPart;
+        private final String effect;
+        private final String treatment;
+        private final String notes;
+
+        public InjuryEntry(String name, String affectedPart, String effect, String treatment, String notes) {
+            this.name = name;
+            this.affectedPart = affectedPart;
+            this.effect = effect;
+            this.treatment = treatment;
+            this.notes = notes;
+        }
+
+        public String getName() { return name; }
+        public String getAffectedPart() { return affectedPart; }
+        public String getEffect() { return effect; }
+        public String getTreatment() { return treatment; }
+        public String getNotes() { return notes; }
+    }
 
     public static class SkillEntry {
         private final String name;
@@ -117,6 +142,12 @@ public class CharacterSheetDTO {
 
     public List<SpecializationEntry> getSpecializations() { return specializations; }
     public void setSpecializations(List<SpecializationEntry> specializations) { this.specializations = specializations; }
+
+    public List<InjuryEntry> getInjuries() { return injuries; }
+    public void setInjuries(List<InjuryEntry> injuries) { this.injuries = injuries; }
+
+    public String getStartingMoney() { return startingMoney; }
+    public void setStartingMoney(String startingMoney) { this.startingMoney = startingMoney; }
 
     public int getFatePoints() { return fatePoints; }
     public void setFatePoints(int fatePoints) { this.fatePoints = fatePoints; }

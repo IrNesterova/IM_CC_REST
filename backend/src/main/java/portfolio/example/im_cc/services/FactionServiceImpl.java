@@ -73,7 +73,7 @@ public class FactionServiceImpl implements FactionService {
         // === 1 запрос: весь инвентарь ===
         factionInventoryRepository.findByFactionIn(factionList)
                 .forEach(fi -> factionMap.get(fi.getFaction().getId())
-                        .getInventoryList().add(fi.getInventory()));
+                        .getInventoryList().add(fi));
 
         // === 1 запрос: все группы выборов ===
         List<FactionChoiceGroup> allGroups = factionChoiceGroupRepository.findByFactionIn(factionList);
@@ -111,9 +111,11 @@ public class FactionServiceImpl implements FactionService {
                         o.setId(id);
                         o.setTalents(new ArrayList<>());
                         o.setInventory(new ArrayList<>());
+                        o.setModifiers(new ArrayList<>());
                         return o;
                     });
                     opt.getInventory().add(fic.getInventory());
+                    opt.getModifiers().addAll(fic.getModifiers());
                 });
 
         // Собираем options в группы
@@ -181,9 +183,6 @@ public class FactionServiceImpl implements FactionService {
 
         faction.setInventoryList(
                 factionInventoryRepository.findFactionInventoriesByFaction(faction)
-                        .stream()
-                        .map(FactionInventory::getInventory)
-                        .collect(Collectors.toList())
         );
 
         // =========================================
@@ -193,10 +192,15 @@ public class FactionServiceImpl implements FactionService {
         List<FactionChoiceGroup> groups =
                 factionChoiceGroupRepository.findByFaction(faction);
 
-        Map<Long, ChoiceOption> optionMap = new LinkedHashMap<>();
+        Map<Long, Map<Long, ChoiceOption>> optionsByGroup = new HashMap<>();
+        groups.forEach(g -> {
+            g.setOptions(new ArrayList<>());
+            optionsByGroup.put(g.getId(), new LinkedHashMap<>());
+        });
 
         talentChoiceRepository.findByFactionChoiceGroupIn(groups)
                 .forEach(tc -> {
+                    Map<Long, ChoiceOption> optionMap = optionsByGroup.get(tc.getFactionChoiceGroup().getId());
                     ChoiceOption opt = optionMap.computeIfAbsent(tc.getOption_id(), optId -> {
                         ChoiceOption o = new ChoiceOption();
                         o.setId(optId);
@@ -209,6 +213,7 @@ public class FactionServiceImpl implements FactionService {
 
         inventoryChoiceRepository.findByFactionChoiceGroupIn(groups)
                 .forEach(fic -> {
+                    Map<Long, ChoiceOption> optionMap = optionsByGroup.get(fic.getFactionChoiceGroup().getId());
                     ChoiceOption opt = optionMap.computeIfAbsent(fic.getId(), optId -> {
                         ChoiceOption o = new ChoiceOption();
                         o.setId(optId);
@@ -219,7 +224,7 @@ public class FactionServiceImpl implements FactionService {
                     opt.getInventory().add(fic.getInventory());
                 });
 
-        groups.forEach(g -> g.setOptions(new ArrayList<>(optionMap.values())));
+        groups.forEach(g -> g.setOptions(new ArrayList<>(optionsByGroup.get(g.getId()).values())));
         faction.setChoiceGroups(groups);
 
         return faction;

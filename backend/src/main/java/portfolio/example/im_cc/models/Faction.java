@@ -35,7 +35,7 @@ public class Faction {
     private List<Skill> skillList;
 
     @Transient
-    private List<Inventory> inventoryList;
+    private List<FactionInventory> inventoryList;
 
     @Transient
     private List<Characteristics> primaryCharacteristics;
@@ -60,11 +60,11 @@ public class Faction {
         this.skillList = skillList;
     }
 
-    public List<Inventory> getInventoryList() {
+    public List<FactionInventory> getInventoryList() {
         return inventoryList;
     }
 
-    public void setInventoryList(List<Inventory> inventoryList) {
+    public void setInventoryList(List<FactionInventory> inventoryList) {
         this.inventoryList = inventoryList;
     }
 

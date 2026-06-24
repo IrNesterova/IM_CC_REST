@@ -394,6 +394,64 @@ label .optional {
     gap: 8px;
 }
 
+.item-modifier {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+.item-modifier--quality {
+    background: rgba(var(--accent-rgb), 0.15);
+    border: 1px solid var(--red);
+    color: var(--red);
+}
+
+.item-modifier--flaw {
+    background: rgba(180, 50, 30, 0.12);
+    border: 1px solid #b43218;
+    color: #b43218;
+}
+
+[data-theme="dark"] .item-modifier--flaw {
+    background: rgba(220, 80, 50, 0.15);
+    border: 1px solid #dc5032;
+    color: #dc5032;
+}
+
+.dice-roll-btn {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--muted);
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    padding: 1px 8px;
+    cursor: pointer;
+    transition: 0.15s;
+    border-radius: 3px;
+    line-height: 1.5;
+}
+
+.dice-roll-btn:hover {
+    border-color: var(--red);
+    color: var(--red);
+}
+
+.dice-roll-result {
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--red);
+    min-width: 24px;
+    text-align: center;
+}
+
 /* ─────────────────────────────────────────────────────────
    CHOICE OPTION
 ───────────────────────────────────────────────────────── */
@@ -2368,35 +2426,118 @@ footer {
 @media print {
     @page {
         size: A4 portrait;
-        margin: 7mm;
+        margin: 8mm;
+    }
+
+    /* Override all theme variables to plain black-on-white */
+    :root, [data-theme="dark"] {
+        --bg: #fff;
+        --panel: #fff;
+        --panel-alt: #fff;
+        --ink: #111;
+        --text: #222;
+        --muted: #555;
+        --border: #bbb;
+        --border-strong: #888;
+        --red: #111;
+        --red-dark: #333;
+        --red-hover: #111;
+        --red-mid: #555;
+        --accent: rgba(0,0,0,0.04);
+        --shadow: none;
+        --on-accent: #fff;
+        --field-bg: transparent;
+        --accent-rgb: 0,0,0;
+        --ink-rgb: 0,0,0;
+        --surface-rgb: 255,255,255;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     body {
-        background: white !important;
-        background-image: none !important;
+        background: #fff !important;
+        color: #111 !important;
     }
 
-    .topbar, .wizard-progress, .page-actions, .char-header-actions, .add-row, .adv-btn, .tag-remove-btn {
+    /* Hide everything interactive */
+    .topbar,
+    .wizard-progress,
+    .page-actions,
+    .char-header-actions,
+    .add-row,
+    .adv-ctrl,
+    .tag-remove-btn,
+    .spec-add-btn,
+    .roll-overlay,
+    .roll-toast,
+    .dice-cell,
+    .discord-row,
+    .portrait-upload-btn {
         display: none !important;
+    }
+
+    .char-header::before,
+    .sec-block::before {
+        display: none;
     }
 
     .sheet-wrapper {
         max-width: none;
         padding: 0;
-        gap: 4px;
+        gap: 5mm;
         margin: 0;
     }
 
     .sheet-page {
         box-shadow: none;
-        zoom: 0.78;
+        border: 1px solid #bbb;
+        break-inside: avoid;
         page-break-inside: avoid;
+        zoom: 0.78;
     }
 
     .char-header {
         box-shadow: none;
-        margin-bottom: 4px;
+        border: 1px solid #bbb;
+        margin-bottom: 0;
         zoom: 0.78;
+    }
+
+    /* Roll mode buttons and action buttons */
+    .roll-mode-btn,
+    .action-btn,
+    .copy-btn,
+    .dice-btn {
+        display: none !important;
+    }
+
+    /* Combat bar: hide superiority input, show only initiative/dodge/parry */
+    .combat-bar {
+        grid-template-columns: 1fr 1fr 1fr 2fr;
+    }
+
+    input, textarea, select {
+        background: transparent !important;
+        border-color: #bbb !important;
+        color: #111 !important;
+    }
+
+    .sm-tag {
+        background: transparent !important;
+        border-color: #bbb !important;
+        color: #111 !important;
+    }
+
+    .col-hdr {
+        background: rgba(0,0,0,0.04) !important;
+    }
+
+    .char-table th,
+    .data-table th {
+        background: rgba(0,0,0,0.04) !important;
     }
 }
 

@@ -1,7 +1,8 @@
 import {useEffect, useState, useMemo, useCallback} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {buildSummary, saveCharacter, loadCharacter} from '../api/api';
+import {buildSummary, saveCharacter, loadCharacter, uploadCharacterImage, characterImageUrl, getPsychicDisciplines} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
+import {useAuth} from '../context/AuthContext';
 import Topbar from '../components/Topbar';
 import ProgressBar from '../components/ProgressBar';
 
@@ -17,6 +18,7 @@ const PROTECT_LOCS = ['Head', 'Body', 'Left Arm', 'Right Arm', 'Left Leg', 'Righ
 
 export default function SummaryPage() {
     const {ccm, dispatch} = useCharacter();
+    const {user} = useAuth();
     const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -37,13 +39,21 @@ export default function SummaryPage() {
     const [equipment, setEquipment] = useState([]);
     const [fateTotal, setFateTotal] = useState(3);
     const [fateCur, setFateCur] = useState(3);
+    const [startingMoney, setStartingMoney] = useState(null);
+    const [solarsAmount, setSolarsAmount] = useState('');
+    const [disciplines, setDisciplines] = useState([]);
+    const [knownPowers, setKnownPowers] = useState([]);
     const [woundsCur, setWoundsCur] = useState(0);
     const [critWounds, setCritWounds] = useState(0);
     const [superiority, setSuperiority] = useState(0);
     const [extraSpecs, setExtraSpecs] = useState([]);
     const [openSpecSkill, setOpenSpecSkill] = useState(null);
     const [customSpecText, setCustomSpecText] = useState('');
+    const [charImageUrl, setCharImageUrl] = useState(null);
+    const [imageUploading, setImageUploading] = useState(false);
+    const [imageError, setImageError] = useState(null);
     const [webhookUrl, setWebhookUrl] = useState(() => localStorage.getItem('im_discord_webhook') || '');
+    const effectiveWebhookUrl = user?.webhookUrl || webhookUrl;
     const [lastRoll, setLastRoll] = useState(null);
     const [rolling, setRolling] = useState(false);
     const [rollModal, setRollModal] = useState(null);
@@ -89,10 +99,12 @@ export default function SummaryPage() {
 
     useEffect(() => {
         setLoading(true);
-        buildSummary(ccm)
-            .then(d => setData(d))
-            .catch(() => {
+        Promise.all([buildSummary(ccm), getPsychicDisciplines()])
+            .then(([d, disc]) => {
+                setData(d);
+                setDisciplines(disc);
             })
+            .catch(() => {})
             .finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -127,7 +139,10 @@ export default function SummaryPage() {
         const eqMap = {};
         (sheet.equipment || []).forEach(name => {
             if (eqMap[name]) eqMap[name].qty++;
-            else eqMap[name] = {name, qty: 1, notes: '', equipped: false};
+            else {
+                const wEnc = parseFloat(data?.meleeWeaponMap?.[name]?.wt || data?.rangedWeaponMap?.[name]?.wt) || 0;
+                eqMap[name] = {name, qty: 1, notes: '', equipped: false, enc: wEnc};
+            }
         });
         setEquipment(Object.values(eqMap));
         // auto-fill unified weapon table (deduplicated by name)
@@ -178,6 +193,14 @@ export default function SummaryPage() {
         const fp = sheet.fatePoints || 3;
         setFateTotal(fp);
         setFateCur(fp);
+        const sm = sheet.startingMoney || null;
+        setStartingMoney(sm);
+        if (sm && !/\d+d\d+/i.test(sm)) {
+            const fixed = parseInt(sm);
+            setSolarsAmount(isNaN(fixed) ? '' : String(fixed));
+        } else {
+            setSolarsAmount('');
+        }
         setAge(sheet.age || '');
         setHeight(sheet.height || '');
         setEyes(sheet.eyeType || '');
@@ -221,6 +244,10 @@ export default function SummaryPage() {
     // Parry: WS + best Melee skill advance
     const meleeAdv = Math.max(0, ...Object.keys(skillAdv).filter(k => k.toLowerCase().startsWith('melee')).map(k => skillAdv[k] || 0), 0);
     const parry = (charCurrent['WS'] || 0) + meleeAdv * 5;
+
+    const hasPorter = talents.some(t => t.name.toLowerCase() === 'porter');
+    const encMax = hasPorter ? 2 * b('STR') + b('TGH') : b('STR') + b('TGH');
+    const encCurrent = equipment.reduce((sum, item) => sum + (parseFloat(item.enc) || 0) * (item.qty || 1), 0);
 
     const skillTotal = (skill) => (charCurrent[skill.characteristicAbbr] || 0) + (skillAdv[skill.name] || 0) * 5;
     const specTotal = (spec) => (charCurrent[spec.characteristicAbbr] || 0) + ((specAdv[spec.name] || 0) + (skillAdv[spec.skillName] || spec.skillAdvances || 0)) * 5;
@@ -308,7 +335,8 @@ export default function SummaryPage() {
                 };
                 return n;
             });
-            return [...prev, {name, qty: 1, notes: '', equipped: false}];
+            const wEnc = parseFloat(data?.meleeWeaponMap?.[name]?.wt || data?.rangedWeaponMap?.[name]?.wt) || 0;
+            return [...prev, {name, qty: 1, notes: '', equipped: false, enc: wEnc}];
         });
     };
 
@@ -348,10 +376,28 @@ export default function SummaryPage() {
             const payload = JSON.stringify({ccm, edits: {characterName: charName}});
             const result = await saveCharacter(payload, saveCode);
             setSaveCode(result.code);
+            setCharImageUrl(characterImageUrl(result.code));
         } catch (e) {
             console.error(e);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !saveCode) return;
+        setImageUploading(true);
+        setImageError(null);
+        try {
+            await uploadCharacterImage(saveCode, file);
+            setCharImageUrl(characterImageUrl(saveCode) + '?t=' + Date.now());
+        } catch (err) {
+            const msg = err.response?.data?.error || 'Upload failed';
+            setImageError(msg);
+        } finally {
+            setImageUploading(false);
+            e.target.value = '';
         }
     };
 
@@ -399,8 +445,8 @@ export default function SummaryPage() {
         {label: 'Very Hard', short: 'VH', mod: -30},
     ];
 
-    const openRollModal = (label, target) => {
-        setRollModal({label, target});
+    const openRollModal = (label, target, isWeapon = false) => {
+        setRollModal({label, target, isWeapon});
         setRollMode('normal');
         setRollDifficulty(0);
         setRollModifier(0);
@@ -412,14 +458,14 @@ export default function SummaryPage() {
         const as = a <= target, bs = b <= target;
         if (as && !bs) return a;
         if (bs && !as) return b;
-        return as ? Math.min(a, b) : Math.max(a, b);
+        return Math.min(a, b); // both same outcome: lower = more DoS or fewer DoF
     };
 
     const chooseWorse = (a, b, target) => {
         const as = a <= target, bs = b <= target;
         if (as && !bs) return b;
         if (bs && !as) return a;
-        return as ? Math.max(a, b) : Math.min(a, b);
+        return Math.max(a, b); // both same outcome: higher = fewer DoS or more DoF
     };
 
     const executeRoll = async () => {
@@ -435,40 +481,56 @@ export default function SummaryPage() {
 
         const success = value <= effectiveTarget;
         const isDouble = value === 100 || (value < 100 && Math.floor(value / 10) === value % 10);
-        const crit = isDouble && success;
-        const fumble = isDouble && !success;
+        const crit = rollModal.isWeapon && isDouble && success;
+        const fumble = rollModal.isWeapon && isDouble && !success;
         const rawDoS = success ? Math.floor((effectiveTarget - value) / 10) : Math.floor((value - effectiveTarget - 1) / 10);
         const degrees = success ? rawDoS + rollExtraDoS : rawDoS;
         const result = {value, orig, rev, reversed, success, crit, fumble, degrees, effectiveTarget};
         setRollResult(result);
         setLastRoll({value, label: rollModal.label, target: effectiveTarget, success, degrees, crit, fumble});
 
-        if (!webhookUrl.trim()) return;
+        if (!effectiveWebhookUrl.trim()) return;
         setRolling(true);
         try {
             const diffLabel = DIFFICULTIES.find(d => d.mod === rollDifficulty)?.label || '';
-            const modeStr = rollMode !== 'normal' ? ` *(${rollMode})* ` : ' ';
-            const diffStr = diffLabel ? ` — ${diffLabel}` : '';
-            const modStr = rollModifier !== 0 ? ` mod ${rollModifier > 0 ? '+' : ''}${rollModifier}` : '';
-            const who = `**${charName || 'Character'}** — **${rollModal.label}**${diffStr}${modeStr}(target: **${effectiveTarget}**${modStr})`;
-            const revNote = reversed ? ` *(reversed ${orig}→${rev})*` : orig !== rev ? ` *(${orig} / ${rev})*` : '';
+            const revNote = reversed ? ` *(reversed ${orig}→${rev})*`
+                : (rollMode !== 'normal' && orig !== rev) ? ` *(${orig} / ${rev})*` : '';
             const outcome = crit ? `Roll: **${value}**${revNote} 🌟 Critical Success!`
                 : fumble ? `Roll: **${value}**${revNote} 💀 Fumble!`
                     : success ? `Roll: **${value}**${revNote} ✅ Success (DoS: ${degrees})`
                         : `Roll: **${value}**${revNote} ❌ Failure (DoF: ${degrees})`;
             const color = crit ? 0xf1c40f : fumble ? 0x8e44ad : success ? 0x27ae60 : 0xe74c3c;
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    embeds: [{
-                        title: '🎲 d100',
-                        description: `${who}\n${outcome}`,
-                        color,
-                        footer: {text: 'Imperium Maledictum'}
-                    }]
-                }),
-            });
+            const diffStr2 = diffLabel ? ` — ${diffLabel}` : '';
+            const modStr2 = rollModifier !== 0 ? ` mod ${rollModifier > 0 ? '+' : ''}${rollModifier}` : '';
+            const modeStr2 = rollMode !== 'normal' ? ` *(${rollMode})*` : '';
+            const embed = {
+                title: `🎲 ${rollModal.label}${diffStr2}${modeStr2}`,
+                description: `Target: **${effectiveTarget}**${modStr2}\n${outcome}`,
+                color,
+                footer: {text: 'Imperium Maledictum'},
+            };
+            if (user?.displayName) embed.author = {name: user.displayName};
+            const webhookBody = {embeds: [embed]};
+            if (charName) webhookBody.username = charName;
+
+            if (charImageUrl) {
+                // Send image as file attachment so it works on localhost too
+                try {
+                    const blob = await fetch(charImageUrl.split('?')[0], {credentials: 'include'}).then(r => r.blob());
+                    const ext = blob.type.split('/')[1] || 'png';
+                    const filename = `portrait.${ext}`;
+                    embed.thumbnail = {url: `attachment://${filename}`};
+                    const form = new FormData();
+                    form.append('files[0]', blob, filename);
+                    form.append('payload_json', JSON.stringify(webhookBody));
+                    await fetch(effectiveWebhookUrl, {method: 'POST', body: form});
+                } catch {
+                    // fallback: send without image
+                    await fetch(effectiveWebhookUrl, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(webhookBody)});
+                }
+            } else {
+                await fetch(effectiveWebhookUrl, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(webhookBody)});
+            }
         } catch (e) {
             console.error('Discord webhook error:', e);
         } finally {
@@ -527,10 +589,31 @@ export default function SummaryPage() {
                     {/* ── CHARACTER HEADER ── */}
                     <div className="char-header">
                         <div className="char-header-top">
+                            <div className="char-portrait-wrap">
+                                {charImageUrl && (
+                                    <img
+                                        src={charImageUrl}
+                                        alt="Character portrait"
+                                        className="char-portrait"
+                                        onError={() => setCharImageUrl(null)}
+                                    />
+                                )}
+                                {saveCode && (
+                                    <label className="portrait-upload-btn" title={charImageUrl ? 'Change portrait' : 'Upload portrait'}>
+                                        {imageUploading ? '…' : charImageUrl ? '✎' : '+'}
+                                        <input type="file" accept="image/*" style={{display: 'none'}}
+                                               disabled={imageUploading}
+                                               onChange={handleImageUpload}/>
+                                    </label>
+                                )}
+                            </div>
                             <div className="char-header-name-wrap">
                                 <div className="char-header-eyebrow">Character Sheet</div>
                                 <input className="char-header-name" value={charName}
-                                       onChange={e => setCharName(e.target.value)} placeholder="Character Name"/>
+                                       onChange={e => {
+                                           setCharName(e.target.value);
+                                           dispatch({type: 'SET_DETAILS', payload: {characterName: e.target.value}});
+                                       }} placeholder="Character Name"/>
                             </div>
                             <div className="char-header-actions">
                                 <button className="action-btn" onClick={handleSave}
@@ -927,6 +1010,56 @@ export default function SummaryPage() {
                             </div>
                         </div>
 
+                        {/* Psychic Powers */}
+                        {talents.some(t => t.name.toLowerCase() === 'psyker') && (
+                            <div className="sec-block">
+                                <div className="sec-hdr">Psychic Powers</div>
+                                <div className="sec-body">
+                                    <table className="data-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th style={{width: '36px'}}>WR</th>
+                                            <th style={{width: '100px'}}>Difficulty</th>
+                                            <th style={{width: '80px'}}>Range</th>
+                                            <th style={{width: '80px'}}>Target</th>
+                                            <th style={{width: '80px'}}>Duration</th>
+                                            <th>Effect</th>
+                                            <th style={{width: '24px'}}></th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {knownPowers.map(p => (
+                                            <tr key={p.id}>
+                                                <td>{p.name}</td>
+                                                <td style={{textAlign: 'center'}}>{p.warpRating}</td>
+                                                <td>{p.difficulty}</td>
+                                                <td>{p.range}</td>
+                                                <td>{p.target}</td>
+                                                <td>{p.duration}</td>
+                                                <td style={{fontSize: '13px', color: 'var(--muted)', fontFamily: "'Barlow', sans-serif"}}>{p.effect}</td>
+                                                <td style={{textAlign: 'center', padding: '2px'}}>
+                                                    <button className="tag-remove-btn"
+                                                            onClick={() => setKnownPowers(prev => prev.filter(x => x.id !== p.id))}>×</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                    <AcAddRow
+                                        placeholder="Search powers…"
+                                        options={disciplines.flatMap(d => d.powers || []).map(p => p.name)}
+                                        onAdd={name => {
+                                            const power = disciplines.flatMap(d => d.powers || []).find(p => p.name === name);
+                                            if (power && !knownPowers.find(p => p.id === power.id)) {
+                                                setKnownPowers(prev => [...prev, power]);
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                     {/* /page 2 */}
 
@@ -944,11 +1077,11 @@ export default function SummaryPage() {
                             </div>
                             <div className="cb-cell">
                                 <div className="id-label">Dodge</div>
-                                <div className="cb-val">{dodge}</div>
+                                <div className="cb-val rollable" onClick={() => openRollModal('Dodge', dodge)}>{dodge}</div>
                             </div>
                             <div className="cb-cell">
                                 <div className="id-label">Parry</div>
-                                <div className="cb-val">{parry}</div>
+                                <div className="cb-val rollable" onClick={() => openRollModal('Parry', parry)}>{parry}</div>
                             </div>
                             <div className="cb-cell">
                                 <div className="id-label">Superiority</div>
@@ -966,20 +1099,6 @@ export default function SummaryPage() {
                             </div>
                         </div>
 
-                        {/* Discord Webhook */}
-                        <div className="discord-row">
-                            <span className="discord-label">Discord webhook</span>
-                            <input
-                                className="discord-input"
-                                type="text"
-                                placeholder="https://discord.com/api/webhooks/…"
-                                value={webhookUrl}
-                                onChange={e => {
-                                    setWebhookUrl(e.target.value);
-                                    localStorage.setItem('im_discord_webhook', e.target.value);
-                                }}
-                            />
-                        </div>
 
                         {/* Combat Actions */}
                         {(data.allActionNames || []).length > 0 && (
@@ -1027,7 +1146,7 @@ export default function SummaryPage() {
                                             <td style={{textAlign: 'center', padding: '2px'}}>
                                                 {r.name && r.test && (
                                                     <span className="weapon-roll-trigger rollable"
-                                                          onClick={() => openRollModal(`${r.name} (${r.test})`, charCurrent[r.test] || 0)}>
+                                                          onClick={() => openRollModal(`${r.name} (${r.test})`, charCurrent[r.test] || 0, true)}>
                               {r.test}
                             </span>
                                                 )}
@@ -1101,7 +1220,7 @@ export default function SummaryPage() {
                                     <tr>
                                         <th style={{width: '90px'}}>Location</th>
                                         <th>Effect / Notes</th>
-                                        <th style={{width: '38px'}}>Value</th>
+
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -1111,8 +1230,7 @@ export default function SummaryPage() {
                                                        onChange={e => updateCritRow(i, 'loc', e.target.value)}/></td>
                                             <td><input type="text" value={r.effect}
                                                        onChange={e => updateCritRow(i, 'effect', e.target.value)}/></td>
-                                            <td><input type="text" value={r.val}
-                                                       onChange={e => updateCritRow(i, 'val', e.target.value)}/></td>
+
                                         </tr>
                                     ))}
                                     </tbody>
@@ -1166,7 +1284,8 @@ export default function SummaryPage() {
                                     <tr>
                                         <th style={{width: '28px'}} title="Equipped">Eqp</th>
                                         <th>Name</th>
-                                        <th style={{width: '40px'}}>Qty</th>
+                                        <th style={{width: '36px'}}>Qty</th>
+                                        <th style={{width: '36px'}}>Enc</th>
                                         <th>Notes</th>
                                         <th style={{width: '24px'}}></th>
                                     </tr>
@@ -1188,6 +1307,11 @@ export default function SummaryPage() {
                                                            ...x,
                                                            qty: parseInt(e.target.value) || 1
                                                        } : x))} style={{textAlign: 'center'}}/></td>
+                                            <td><input type="number" min={0} step={0.5} value={item.enc ?? 0}
+                                                       onChange={e => setEquipment(p => p.map((x, j) => j === i ? {
+                                                           ...x,
+                                                           enc: parseFloat(e.target.value) || 0
+                                                       } : x))} style={{textAlign: 'center'}}/></td>
                                             <td><input type="text" value={item.notes}
                                                        onChange={e => setEquipment(p => p.map((x, j) => j === i ? {
                                                            ...x,
@@ -1203,6 +1327,41 @@ export default function SummaryPage() {
                                 </table>
                                 <AcAddRow placeholder="Search equipment…" options={data.allInventoryNames || []}
                                           onAdd={addEquip}/>
+                                <div style={{display:'flex', alignItems:'center', gap:'24px', marginTop:'10px', padding:'6px 0', borderTop:'1px solid var(--border)'}}>
+                                    <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                                        <span className="id-label" style={{margin:0}}>Encumbrance</span>
+                                        <span className="fate-threshold">{encCurrent % 1 === 0 ? encCurrent : encCurrent.toFixed(1)}</span>
+                                        <span style={{color:'var(--muted)', fontFamily:"'Barlow',sans-serif", fontSize:'13px'}}>/</span>
+                                        <span className={`fate-threshold${encCurrent > encMax ? ' over-enc' : ''}`}
+                                              style={{color: encCurrent > encMax ? 'var(--red)' : undefined}}>{encMax}</span>
+                                    </div>
+                                    <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                                        <span className="id-label" style={{margin:0}}>Solars</span>
+                                        {startingMoney && (() => {
+                                            const isDice = /\d+d\d+/i.test(startingMoney);
+                                            const rollMoney = () => {
+                                                const match = startingMoney.match(/(\d+)d(\d+)/i);
+                                                if (!match) return;
+                                                const [, count, sides] = match.map(Number);
+                                                let total = 0;
+                                                for (let i = 0; i < count; i++) total += Math.floor(Math.random() * sides) + 1;
+                                                setSolarsAmount(String(total));
+                                            };
+                                            return isDice
+                                                ? <button className="dice-roll-btn" onClick={rollMoney} title={`Roll ${startingMoney}`}>⚄ {startingMoney}</button>
+                                                : null;
+                                        })()}
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={solarsAmount}
+                                            onChange={e => setSolarsAmount(e.target.value)}
+                                            placeholder="—"
+                                            className="fate-num-input"
+                                            style={{width:'60px'}}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1365,6 +1524,21 @@ export default function SummaryPage() {
                                 </div>
                             </div>
 
+                            {superiority > 0 && (
+                                <label style={{
+                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                    cursor: 'pointer', marginBottom: '8px',
+                                    fontFamily: "'Barlow', sans-serif", fontSize: '13px',
+                                    color: 'var(--text)', userSelect: 'none',
+                                }}>
+                                    <input type="checkbox"
+                                           checked={rollExtraDoS >= superiority}
+                                           onChange={e => setRollExtraDoS(d => e.target.checked ? d + superiority : Math.max(0, d - superiority))}
+                                           style={{width: 'auto', accentColor: 'var(--red)'}}/>
+                                    Add Superiority (+{superiority} DoS)
+                                </label>
+                            )}
+
                             <button className="roll-execute-btn" onClick={executeRoll} disabled={rolling}>
                                 {rolling ? 'Rolling…' : 'Roll d100'}
                             </button>
@@ -1373,7 +1547,7 @@ export default function SummaryPage() {
                                 <div
                                     className={`roll-modal-result${rollResult.crit ? ' crit' : rollResult.fumble ? ' fumble' : rollResult.success ? ' success' : ' failure'}`}>
                                     <div className="rmr-dice">
-                                        {rollResult.orig !== rollResult.rev
+                                        {rollMode !== 'normal' && rollResult.orig !== rollResult.rev
                                             ? <><span
                                                 className={rollResult.reversed ? 'rmr-dim' : ''}>{rollResult.orig}</span>
                                                 <span className="rmr-sep">/</span>
@@ -1382,7 +1556,7 @@ export default function SummaryPage() {
                                             </>
                                             : rollResult.value}
                                     </div>
-                                    {rollResult.orig !== rollResult.rev && (
+                                    {rollMode !== 'normal' && rollResult.orig !== rollResult.rev && (
                                         <div className="rmr-chosen">
                                             {rollResult.reversed ? 'reversed →' : 'used →'}
                                             <strong>{rollResult.value}</strong>

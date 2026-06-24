@@ -97,26 +97,34 @@ public class SummaryServiceImpl {
                 factionInventoryRepository.findFactionInventoriesByFaction(faction)
                     .forEach(fi -> {
                         Inventory inv = fi.getInventory();
-                        equipment.add(inv.getName());
-                        if (isAugmetic(inv)) augmetics.add(inv.getName());
+                        if (inv != null && inv.getId() == 1L) {
+                            String qty = fi.getQuantity();
+                            dto.setStartingMoney(qty != null ? qty : inv.getName());
+                        } else if (inv != null) {
+                            equipment.add(inv.getName());
+                            if (isAugmetic(inv)) augmetics.add(inv.getName());
+                        }
                     });
             }
 
-            for (Map.Entry<Long, Long> entry : ccm.getFactionChoices().entrySet()) {
+            for (Map.Entry<Long, List<Long>> entry : ccm.getFactionChoices().entrySet()) {
                 FactionChoiceGroup group = factionChoiceGroupRepository
                     .findById(entry.getKey()).orElse(null);
                 if (group == null) continue;
-                Long optionId = entry.getValue();
-                factionTalentChoiceRepository.findByFactionChoiceGroup(group).stream()
-                    .filter(tc -> optionId.equals(tc.getOption_id()))
-                    .forEach(tc -> talents.add(tc.getTalent().getName()));
-                if (!usePack) {
-                    factionInventoryChoiceRepository.findById(optionId)
-                        .ifPresent(fic -> {
-                            Inventory inv = fic.getInventory();
-                            equipment.add(inv.getName());
-                            if (isAugmetic(inv)) augmetics.add(inv.getName());
-                        });
+                List<Long> optionIds = entry.getValue();
+                if (optionIds == null) continue;
+                for (Long optionId : optionIds) {
+                    factionTalentChoiceRepository.findByFactionChoiceGroup(group).stream()
+                        .filter(tc -> optionId.equals(tc.getOption_id()))
+                        .forEach(tc -> talents.add(tc.getTalent().getName()));
+                    if (!usePack) {
+                        factionInventoryChoiceRepository.findById(optionId)
+                            .ifPresent(fic -> {
+                                Inventory inv = fic.getInventory();
+                                equipment.add(inv.getName());
+                                if (isAugmetic(inv)) augmetics.add(inv.getName());
+                            });
+                    }
                 }
             }
         }
@@ -169,7 +177,11 @@ public class SummaryServiceImpl {
                         equipment.add(entry);
                         if (isAugmetic(item.getInventory())) augmetics.add(item.getInventory().getName());
                     } else if (item.getNote() != null) {
-                        equipment.add(item.getNote());
+                        if (item.getNote().matches("(?i).*\\d+\\s*solars?.*")) {
+                            dto.setStartingMoney(item.getNote());
+                        } else {
+                            equipment.add(item.getNote());
+                        }
                     }
                 });
         }

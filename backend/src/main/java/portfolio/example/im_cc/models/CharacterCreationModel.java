@@ -11,7 +11,7 @@ public class CharacterCreationModel {
     private Long roleId;
     private Map<String, String> characteristics = new HashMap<>();
     private Map<Long, Integer> factionSkillAdvances = new HashMap<>();
-    private Map<Long, Long> factionChoices = new HashMap<>();
+    private Map<Long, List<Long>> factionChoices = new HashMap<>();
     private Map<Long, List<Long>> roleChoices = new HashMap<>();
     private Map<Long, Integer> roleSkillAdvances = new HashMap<>();
     private Map<Long, Integer> roleSpecAdvances = new HashMap<>();
@@ -63,11 +63,11 @@ public class CharacterCreationModel {
         this.factionSkillAdvances = factionSkillAdvances;
     }
 
-    public Map<Long, Long> getFactionChoices() {
+    public Map<Long, List<Long>> getFactionChoices() {
         return factionChoices;
     }
 
-    public void setFactionChoices(Map<Long, Long> factionChoices) {
+    public void setFactionChoices(Map<Long, List<Long>> factionChoices) {
         this.factionChoices = factionChoices;
     }
 

@@ -9,7 +9,10 @@ export default function BugReport() {
     const submit = async () => {
         if (!description.trim()) return;
         try {
-            await submitBugReport({description});
+            await submitBugReport({
+                description,
+                pageUrl: window.location.href,
+            });
             setSent(true);
             setDescription('');
             setTimeout(() => {

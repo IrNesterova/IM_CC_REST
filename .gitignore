@@ -1,2 +1,5 @@
 # Project exclude paths
 /backend/target/
+
+# Local secrets — never commit
+/backend/src/main/resources/application-local.properties

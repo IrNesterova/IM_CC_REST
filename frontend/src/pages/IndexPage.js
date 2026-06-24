@@ -1,7 +1,8 @@
 import {useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, Link} from 'react-router-dom';
 import {loadCharacter} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
+import {useAuth} from '../context/AuthContext';
 import Topbar from '../components/Topbar';
 
 export default function IndexPage() {
@@ -10,6 +11,7 @@ export default function IndexPage() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const {dispatch} = useCharacter();
+    const {user, logout} = useAuth();
 
     const doLoad = async () => {
         const c = code.trim().toUpperCase();
@@ -166,6 +168,59 @@ export default function IndexPage() {
                         {error &&
                             <div style={{color: 'var(--red)', fontSize: '14px', fontStyle: 'italic'}}>{error}</div>}
                     </div>
+
+                    <div style={{height: '1px', background: 'var(--border)', margin: '28px 0'}}/>
+
+                    {user ? (
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                            <div style={{
+                                fontSize: '13px', color: 'var(--muted)',
+                                fontFamily: "'Barlow', sans-serif", letterSpacing: '1px',
+                                textAlign: 'center',
+                            }}>
+                                {user.displayName || user.email}
+                            </div>
+                            <button onClick={() => navigate('/cabinet')} style={{
+                                width: '100%', padding: '14px 28px',
+                                fontFamily: "'Barlow', sans-serif", fontSize: '12px', fontWeight: 600,
+                                letterSpacing: '3px', textTransform: 'uppercase',
+                                background: 'transparent', color: 'var(--ink)',
+                                border: '1px solid var(--border-strong)', cursor: 'pointer',
+                            }}>
+                                My cabinet
+                            </button>
+                            <button onClick={logout} style={{
+                                width: '100%', padding: '12px 28px',
+                                fontFamily: "'Barlow', sans-serif", fontSize: '11px', fontWeight: 400,
+                                letterSpacing: '2px', textTransform: 'uppercase',
+                                background: 'transparent', color: 'var(--muted)',
+                                border: '1px solid var(--border)', cursor: 'pointer',
+                            }}>
+                                Sign out
+                            </button>
+                        </div>
+                    ) : (
+                        <div style={{display: 'flex', gap: '10px'}}>
+                            <Link to="/login" style={{
+                                flex: 1, padding: '14px 0', textAlign: 'center', textDecoration: 'none',
+                                fontFamily: "'Barlow', sans-serif", fontSize: '12px', fontWeight: 600,
+                                letterSpacing: '3px', textTransform: 'uppercase',
+                                background: 'transparent', color: 'var(--ink)',
+                                border: '1px solid var(--border-strong)', display: 'block',
+                            }}>
+                                Sign In
+                            </Link>
+                            <Link to="/register" style={{
+                                flex: 1, padding: '14px 0', textAlign: 'center', textDecoration: 'none',
+                                fontFamily: "'Barlow', sans-serif", fontSize: '12px', fontWeight: 600,
+                                letterSpacing: '3px', textTransform: 'uppercase',
+                                background: 'transparent', color: 'var(--ink)',
+                                border: '1px solid var(--border-strong)', display: 'block',
+                            }}>
+                                Register
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </main>
         </>
