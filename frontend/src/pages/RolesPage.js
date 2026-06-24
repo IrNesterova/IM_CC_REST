@@ -126,8 +126,6 @@ export default function RolesPage() {
 
     const packChosen = !!ccm.equipmentPackId;
 
-    if (!selected) return null;
-
     if (loading) return (
         <><ProgressBar/><Topbar/>
             <div style={{display:'flex',justifyContent:'center',alignItems:'center',minHeight:'60vh',color:'var(--muted)',fontFamily:"'Barlow',sans-serif",fontSize:'13px',letterSpacing:'3px'}}>
@@ -135,6 +133,8 @@ export default function RolesPage() {
             </div>
         </>
     );
+
+    if (!selected) return null;
 
     return (
         <>
