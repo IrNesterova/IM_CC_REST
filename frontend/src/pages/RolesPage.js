@@ -14,6 +14,7 @@ export default function RolesPage() {
     const [roleSpecAdv, setRoleSpecAdv] = useState({});
     const [expandedSkills, setExpandedSkills] = useState({});
     const [expandedTalents, setExpandedTalents] = useState({});
+    const [itemVariantChoices, setItemVariantChoices] = useState({});
     const navigate = useNavigate();
     const {ccm, dispatch} = useCharacter();
 
@@ -39,6 +40,7 @@ export default function RolesPage() {
         setRoleChoices({});
         setRoleSkillAdv({});
         setRoleSpecAdv({});
+        setItemVariantChoices({});
     };
 
     const toggleChoice = (groupId, optId, max, type) => {
@@ -68,8 +70,12 @@ export default function RolesPage() {
         setRoleSpecAdv(prev => ({...prev, [skillId]: cur + delta}));
     };
 
+    const variantItemsMissing = (selected?.inventoryList || [])
+        .filter(i => i.variants?.length > 0 && !itemVariantChoices[i.id]);
+
     const handleSubmit = () => {
         if (!selected) return;
+        if (variantItemsMissing.length > 0) return;
 
         // Collect skill names with advances
         const skillSummaryParts = [];
@@ -115,6 +121,7 @@ export default function RolesPage() {
                 roleChoices,
                 roleSkillAdvances: roleSkillAdv,
                 roleSpecAdvances: roleSpecAdv,
+                itemVariantChoices,
                 _roleName: selected.name,
                 _roleSkillSummary: skillSummaryParts.join(', '),
                 _roleSpecSummary: specSummaryParts.join(', '),
@@ -227,8 +234,42 @@ export default function RolesPage() {
                         {/* Fixed inventory */}
                         {!packChosen && selected.inventoryList?.length > 0 && (
                             <Section title="Starting Equipment">
-                                <div className="tag-list">{selected.inventoryList.map(i => <div key={i.id}
-                                                                                                className="tag">{i.name}</div>)}</div>
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                                    <div className="tag-list">
+                                        {selected.inventoryList.map(i => (
+                                            <div key={i.id} className="tag">{i.name}</div>
+                                        ))}
+                                    </div>
+                                    {selected.inventoryList.filter(i => i.variants?.length > 0).map(item => (
+                                        <div key={item.id} style={{
+                                            padding: '14px 18px',
+                                            borderLeft: '2px solid var(--red)',
+                                            background: 'var(--panel)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '10px'
+                                        }}>
+                                            <div style={{color: 'var(--ink)', fontSize: '15px', fontFamily: "'Barlow', sans-serif", letterSpacing: '1px'}}>
+                                                Choose function for <strong>{item.name}</strong>:
+                                            </div>
+                                            {item.variants.map(v => (
+                                                <label key={v.id} style={{display: 'flex', gap: '10px', cursor: 'pointer', alignItems: 'flex-start'}}>
+                                                    <input
+                                                        type="radio"
+                                                        name={`variant-${item.id}`}
+                                                        checked={itemVariantChoices[item.id] === v.id}
+                                                        onChange={() => setItemVariantChoices(prev => ({...prev, [item.id]: v.id}))}
+                                                        style={{accentColor: 'var(--red)', marginTop: '3px', flexShrink: 0}}
+                                                    />
+                                                    <div>
+                                                        <div style={{color: 'var(--ink)', fontSize: '16px'}}>{v.name}</div>
+                                                        <div style={{color: 'var(--muted)', fontSize: '13px', lineHeight: '1.5'}}>{v.description}</div>
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
                             </Section>
                         )}
 

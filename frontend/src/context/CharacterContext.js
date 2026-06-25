@@ -27,6 +27,7 @@ const initialState = {
     roleChoices: {},
     roleSkillAdvances: {},
     roleSpecAdvances: {},
+    itemVariantChoices: {},
     characterName: '',
     age: '',
     eyeType: '',
@@ -90,6 +91,7 @@ function reducer(state, action) {
                 roleChoices: action.payload.roleChoices,
                 roleSkillAdvances: action.payload.roleSkillAdvances,
                 roleSpecAdvances: action.payload.roleSpecAdvances,
+                itemVariantChoices: action.payload.itemVariantChoices || {},
             };
         case 'SET_DETAILS':
             return {...state, ...action.payload};

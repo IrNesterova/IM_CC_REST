@@ -15,6 +15,7 @@ public class CharacterCreationModel {
     private Map<Long, List<Long>> roleChoices = new HashMap<>();
     private Map<Long, Integer> roleSkillAdvances = new HashMap<>();
     private Map<Long, Integer> roleSpecAdvances = new HashMap<>();
+    private Map<Long, Long> itemVariantChoices = new HashMap<>();
 
     // Equipment Pack step
     private Long equipmentPackId;
@@ -144,4 +145,7 @@ public class CharacterCreationModel {
 
     public Map<Long, Integer> getRoleSpecAdvances() { return roleSpecAdvances; }
     public void setRoleSpecAdvances(Map<Long, Integer> roleSpecAdvances) { this.roleSpecAdvances = roleSpecAdvances; }
+
+    public Map<Long, Long> getItemVariantChoices() { return itemVariantChoices; }
+    public void setItemVariantChoices(Map<Long, Long> itemVariantChoices) { this.itemVariantChoices = itemVariantChoices; }
 }

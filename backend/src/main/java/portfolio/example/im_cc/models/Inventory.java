@@ -2,6 +2,10 @@ package portfolio.example.im_cc.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table
@@ -25,6 +29,10 @@ public abstract class Inventory {
     @Enumerated(EnumType.STRING)
     @Column(name = "source_book")
     private SourceBook sourceBook;
+
+    @OneToMany(mappedBy = "inventory", fetch = FetchType.EAGER)
+    @BatchSize(size = 50)
+    private List<InventoryVariant> variants = new ArrayList<>();
     public String getName() {
         return name;
     }
@@ -90,4 +98,7 @@ public abstract class Inventory {
     public void setSourceBook(SourceBook sourceBook) {
         this.sourceBook = sourceBook;
     }
+
+    public List<InventoryVariant> getVariants() { return variants; }
+    public void setVariants(List<InventoryVariant> variants) { this.variants = variants; }
 }

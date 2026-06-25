@@ -28,6 +28,17 @@ public class SummaryServiceImpl {
     @Autowired RoleInventoryChoiceGroupRepository roleInventoryChoiceGroupRepository;
     @Autowired portfolio.example.im_cc.repositories.EquipmentPackItemRepository equipmentPackItemRepository;
 
+    private static String resolveItemName(Inventory inv, Map<Long, Long> variantChoices) {
+        if (variantChoices == null || inv.getVariants().isEmpty()) return inv.getName();
+        Long variantId = variantChoices.get(inv.getId());
+        if (variantId == null) return inv.getName();
+        return inv.getVariants().stream()
+            .filter(v -> variantId.equals(v.getId()))
+            .findFirst()
+            .map(v -> inv.getName() + " (" + v.getName() + ")")
+            .orElse(inv.getName());
+    }
+
     private static boolean isAugmetic(Inventory inv) {
         InventoryCategory cat = inv.getInventoryCategory();
         return cat == InventoryCategory.AUGMETIC || cat == InventoryCategory.AUGMETIC_REPLACEMENTS;
@@ -101,8 +112,9 @@ public class SummaryServiceImpl {
                             String qty = fi.getQuantity();
                             dto.setStartingMoney(qty != null ? qty : inv.getName());
                         } else if (inv != null) {
-                            equipment.add(inv.getName());
-                            if (isAugmetic(inv)) augmetics.add(inv.getName());
+                            String name = resolveItemName(inv, ccm.getItemVariantChoices());
+                            equipment.add(name);
+                            if (isAugmetic(inv)) augmetics.add(name);
                         }
                     });
             }
@@ -121,8 +133,9 @@ public class SummaryServiceImpl {
                         factionInventoryChoiceRepository.findById(optionId)
                             .ifPresent(fic -> {
                                 Inventory inv = fic.getInventory();
-                                equipment.add(inv.getName());
-                                if (isAugmetic(inv)) augmetics.add(inv.getName());
+                                String name = resolveItemName(inv, ccm.getItemVariantChoices());
+                                equipment.add(name);
+                                if (isAugmetic(inv)) augmetics.add(name);
                             });
                     }
                 }
@@ -136,8 +149,9 @@ public class SummaryServiceImpl {
                 roleInventoryRepository.findByRole(role)
                     .forEach(ri -> {
                         Inventory inv = ri.getInventory();
-                        equipment.add(inv.getName());
-                        if (isAugmetic(inv)) augmetics.add(inv.getName());
+                        String name = resolveItemName(inv, ccm.getItemVariantChoices());
+                        equipment.add(name);
+                        if (isAugmetic(inv)) augmetics.add(name);
                     });
             }
 
@@ -158,8 +172,9 @@ public class SummaryServiceImpl {
                                 .filter(r -> selected.contains(r.getInventory().getId()))
                                 .forEach(r -> {
                                     Inventory inv = r.getInventory();
-                                    equipment.add(inv.getName());
-                                    if (isAugmetic(inv)) augmetics.add(inv.getName());
+                                    String name = resolveItemName(inv, ccm.getItemVariantChoices());
+                                    equipment.add(name);
+                                    if (isAugmetic(inv)) augmetics.add(name);
                                 });
                         }
                     }

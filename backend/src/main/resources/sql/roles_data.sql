@@ -412,7 +412,7 @@ BEGIN
     INSERT INTO role_choice_group (role_id, choices_required, choice_type)
     VALUES (v_role_id, 1, 'INVENTORY') RETURNING id INTO v_grp;
     INSERT INTO role_inventory_choice_group (role_choice_group_id, inventory_id)
-    SELECT v_grp, i.id FROM inventory i WHERE i.name IN ('Psy Focus', 'Auspex');
+    SELECT v_grp, i.id FROM inventory i WHERE i.name IN ('Psy Focus', 'Auspex/Scanner');
 END $$;
 
 -- PENUMBRA — sidearm (choose 1): Autopistol / Laspistol

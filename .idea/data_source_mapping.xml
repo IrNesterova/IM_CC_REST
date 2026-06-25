@@ -5,7 +5,9 @@
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/critical_wounds_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/critical_wounds_link_injuries.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/injuries_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inventory_variant_data.sql" value="98da04c6-5e13-4fee-9f1e-b5fa7d2e76f1" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/psychic_powers_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/ranged_weapon.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/roles_data.sql" value="98da04c6-5e13-4fee-9f1e-b5fa7d2e76f1" />
   </component>
 </project>
