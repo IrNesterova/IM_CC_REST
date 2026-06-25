@@ -61,8 +61,6 @@ function reducer(state, action) {
                 originPrimaryCharNames: action.payload.originPrimaryCharNames,
                 originSecondaryCharName: action.payload.originSecondaryCharName,
                 characteristics: action.payload.characteristics,
-                factionPrimaryCharNames: '',
-                factionSecondaryCharName: '',
             };
         case 'SET_FACTION':
             return {
