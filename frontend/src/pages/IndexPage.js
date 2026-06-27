@@ -102,13 +102,13 @@ export default function IndexPage() {
                     </ul>
 
                     <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                        <a href="/characteristics" style={{
+                        <button onClick={() => { dispatch({type: 'RESET'}); navigate('/characteristics'); }} style={{
                             display: 'block', width: '100%', padding: '16px 28px',
                             fontFamily: "'Barlow', sans-serif", fontSize: '12px', fontWeight: 600,
                             letterSpacing: '3px', textTransform: 'uppercase', textAlign: 'center',
-                            textDecoration: 'none', background: 'var(--red)', color: 'var(--on-accent)',
-                            border: '1px solid var(--red)', boxSizing: 'border-box',
-                        }}>Create a character</a>
+                            background: 'var(--red)', color: 'var(--on-accent)',
+                            border: '1px solid var(--red)', boxSizing: 'border-box', cursor: 'pointer',
+                        }}>Create a character</button>
 
                         <button
                             onClick={() => setShowLoad(v => !v)}

@@ -21,6 +21,9 @@ public class Role {
     @Transient
     private List<RoleChoiceGroup> choiceGroups;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_book")
+    private SourceBook sourceBook;
 
     public List<Inventory> getInventoryList() {
         return inventoryList;
@@ -52,5 +55,13 @@ public class Role {
 
     public void setChoiceGroups(List<RoleChoiceGroup> choiceGroups) {
         this.choiceGroups = choiceGroups;
+    }
+
+    public SourceBook getSourceBook() {
+        return sourceBook;
+    }
+
+    public void setSourceBook(SourceBook sourceBook) {
+        this.sourceBook = sourceBook;
     }
 }

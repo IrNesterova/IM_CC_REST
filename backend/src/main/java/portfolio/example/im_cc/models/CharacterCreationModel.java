@@ -16,6 +16,17 @@ public class CharacterCreationModel {
     private Map<Long, Integer> roleSkillAdvances = new HashMap<>();
     private Map<Long, Integer> roleSpecAdvances = new HashMap<>();
     private Map<Long, Long> itemVariantChoices = new HashMap<>();
+    private Map<Long, Integer> originSkillAdvances = new HashMap<>();
+    private Map<Long, Integer> originSpecAdvances = new HashMap<>();
+    private Map<Long, String> originSpecTopics = new HashMap<>();
+    private Long originAugmeticId;
+    private String originAugmeticTrait;
+
+    // AM supplement: Augmentation Grade selection
+    private Long factionGradeId;
+    private Long factionGradeCharId;
+    private Map<Long, Integer> factionGradeSkillAdvances = new HashMap<>();
+    private Map<Long, List<Long>> factionGradeChoices = new HashMap<>();
 
     // Equipment Pack step
     private Long equipmentPackId;
@@ -148,4 +159,40 @@ public class CharacterCreationModel {
 
     public Map<Long, Long> getItemVariantChoices() { return itemVariantChoices; }
     public void setItemVariantChoices(Map<Long, Long> itemVariantChoices) { this.itemVariantChoices = itemVariantChoices; }
+
+    public Map<Long, Integer> getOriginSkillAdvances() { return originSkillAdvances; }
+    public void setOriginSkillAdvances(Map<Long, Integer> originSkillAdvances) { this.originSkillAdvances = originSkillAdvances; }
+
+    public Map<Long, Integer> getOriginSpecAdvances() { return originSpecAdvances; }
+    public void setOriginSpecAdvances(Map<Long, Integer> originSpecAdvances) { this.originSpecAdvances = originSpecAdvances; }
+
+    public Map<Long, String> getOriginSpecTopics() { return originSpecTopics; }
+    public void setOriginSpecTopics(Map<Long, String> originSpecTopics) { this.originSpecTopics = originSpecTopics; }
+
+    public Long getOriginAugmeticId() { return originAugmeticId; }
+    public void setOriginAugmeticId(Long originAugmeticId) { this.originAugmeticId = originAugmeticId; }
+
+    public String getOriginAugmeticTrait() { return originAugmeticTrait; }
+    public void setOriginAugmeticTrait(String originAugmeticTrait) { this.originAugmeticTrait = originAugmeticTrait; }
+
+    public Long getFactionGradeId() { return factionGradeId; }
+    public void setFactionGradeId(Long factionGradeId) { this.factionGradeId = factionGradeId; }
+
+    public Long getFactionGradeCharId() { return factionGradeCharId; }
+    public void setFactionGradeCharId(Long factionGradeCharId) { this.factionGradeCharId = factionGradeCharId; }
+
+    public Map<Long, Integer> getFactionGradeSkillAdvances() { return factionGradeSkillAdvances; }
+    public void setFactionGradeSkillAdvances(Map<Long, Integer> factionGradeSkillAdvances) { this.factionGradeSkillAdvances = factionGradeSkillAdvances; }
+
+    public Map<Long, List<Long>> getFactionGradeChoices() { return factionGradeChoices; }
+    public void setFactionGradeChoices(Map<Long, List<Long>> factionGradeChoices) { this.factionGradeChoices = factionGradeChoices; }
+
+    private Long subtleMutationPositiveId;
+    private Long subtleMutationNegativeId;
+
+    public Long getSubtleMutationPositiveId() { return subtleMutationPositiveId; }
+    public void setSubtleMutationPositiveId(Long subtleMutationPositiveId) { this.subtleMutationPositiveId = subtleMutationPositiveId; }
+
+    public Long getSubtleMutationNegativeId() { return subtleMutationNegativeId; }
+    public void setSubtleMutationNegativeId(Long subtleMutationNegativeId) { this.subtleMutationNegativeId = subtleMutationNegativeId; }
 }

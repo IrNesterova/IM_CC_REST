@@ -20,5 +20,21 @@ public enum InventorySubcategory {
     BASIC,
     FLAK,
     MESH,
-    CARAPACE
+    CARAPACE,
+    KROOT,
+    GRAVITON,
+    CROSSBOW,
+    MALEFIC,
+    PULSE,
+    SHURIKEN,
+    SPLINTER,
+    EXOTIC_MELEE,
+    NEMESIS,
+    NULL_WEAPON,
+    TAINTED,
+    ARC,
+    FLECHETTE,
+    GALVANIC,
+    PHOSPHOR,
+    RADIUM
 }

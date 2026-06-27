@@ -3,11 +3,8 @@ package portfolio.example.im_cc.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import portfolio.example.im_cc.models.Characteristics;
-import portfolio.example.im_cc.models.CharacteristicsOrigin;
-import portfolio.example.im_cc.models.Origin;
-import portfolio.example.im_cc.repositories.CharacteristicsOriginRepository;
-import portfolio.example.im_cc.repositories.OriginRepository;
+import portfolio.example.im_cc.models.*;
+import portfolio.example.im_cc.repositories.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,32 +13,37 @@ import java.util.Optional;
 @Service
 public class OriginServiceImpl implements OriginService {
 
-    @Autowired
-    private OriginRepository originRepository;
-    @Autowired
-    private CharacteristicsOriginRepository characteristicsOriginRepository;
+    @Autowired private OriginRepository originRepository;
+    @Autowired private CharacteristicsOriginRepository characteristicsOriginRepository;
+    @Autowired private OriginTalentRepository originTalentRepository;
+    @Autowired private OriginInventoryItemRepository originInventoryItemRepository;
+    @Autowired private OriginSkillRepository originSkillRepository;
+    @Autowired private OriginSpecializationRepository originSpecializationRepository;
 
     @Override
     public List<Origin> getAllOrigins() {
-
         List<Origin> originsList = originRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
-        for (Origin or : originsList){
-            List<CharacteristicsOrigin> PrimeChar = characteristicsOriginRepository.findByOriginIdAndPrimaryChar(or.getId(), true);
+        for (Origin or : originsList) {
+            List<CharacteristicsOrigin> primeCharRows = characteristicsOriginRepository.findByOriginIdAndPrimaryChar(or.getId(), true);
             List<Characteristics> primeC = new ArrayList<>();
-            for (CharacteristicsOrigin ch : PrimeChar){
-                primeC.add(ch.getCharacteristics());
-            }
+            for (CharacteristicsOrigin ch : primeCharRows) primeC.add(ch.getCharacteristics());
             or.setPrimaryCharacteristsics(primeC);
 
-            List<CharacteristicsOrigin> SecOChar = characteristicsOriginRepository.findByOriginIdAndPrimaryChar(or.getId(),false);
-            List<Characteristics> secChar = new ArrayList<>();
-            for (CharacteristicsOrigin ch: SecOChar){
-                secChar.add(ch.getCharacteristics());
-            }
-            or.setSecondaryCharacteristsics(secChar);
+            List<CharacteristicsOrigin> secCharRows = characteristicsOriginRepository.findByOriginIdAndPrimaryChar(or.getId(), false);
+            List<Characteristics> secC = new ArrayList<>();
+            for (CharacteristicsOrigin ch : secCharRows) secC.add(ch.getCharacteristics());
+            or.setSecondaryCharacteristsics(secC);
+
+            List<OriginTalent> talentRows = originTalentRepository.findByOriginId(or.getId());
+            List<Talent> talents = new ArrayList<>();
+            for (OriginTalent ot : talentRows) talents.add(ot.getTalent());
+            or.setTalentList(talents);
+
+            or.setStartingItems(originInventoryItemRepository.findByOriginId(or.getId()));
+            or.setSkillAdvances(originSkillRepository.findByOriginId(or.getId()));
+            or.setSpecAdvances(originSpecializationRepository.findByOriginId(or.getId()));
         }
         return originsList;
-
     }
 
     @Override
@@ -52,15 +54,8 @@ public class OriginServiceImpl implements OriginService {
     @Override
     public Origin getById(Long id) {
         Optional<Origin> optional = originRepository.findById(id);
-        Origin origin = null;
-        if (optional.isPresent()){
-            origin = optional.get();
-
-        } else{
-            throw new RuntimeException("Origin is not found by id: " + id);
-        }
-        return origin;
-
+        if (optional.isPresent()) return optional.get();
+        throw new RuntimeException("Origin is not found by id: " + id);
     }
 
     @Override

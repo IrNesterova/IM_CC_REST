@@ -15,6 +15,12 @@ public class SummaryResponseDTO {
     // Talent lookup
     private List<String> allTalentNames;
     private Map<String, String> talentDescMap;
+    // talentName → advanceNumber → effect text
+    private Map<String, Map<Integer, String>> talentAdvEffectsMap;
+    // talentName → maxAdvances (only for multi-advance talents)
+    private Map<String, Integer> talentMaxAdvancesMap;
+    // talentName → list of {name, effect} for choice=true options
+    private Map<String, List<Map<String, String>>> talentOptionsMap;
 
     // Inventory lookup
     private List<String> allInventoryNames;
@@ -28,6 +34,7 @@ public class SummaryResponseDTO {
     // Mutation lookup
     private List<String> allMutationNames;
     private Map<String, String> mutationDescMap;
+    private Map<Long, String> mutationIdToNameMap;
 
     // Augmetic lookup
     private List<String> allAugmeticNames;
@@ -52,6 +59,15 @@ public class SummaryResponseDTO {
     public Map<String, String> getTalentDescMap() { return talentDescMap; }
     public void setTalentDescMap(Map<String, String> talentDescMap) { this.talentDescMap = talentDescMap; }
 
+    public Map<String, Map<Integer, String>> getTalentAdvEffectsMap() { return talentAdvEffectsMap; }
+    public void setTalentAdvEffectsMap(Map<String, Map<Integer, String>> talentAdvEffectsMap) { this.talentAdvEffectsMap = talentAdvEffectsMap; }
+
+    public Map<String, Integer> getTalentMaxAdvancesMap() { return talentMaxAdvancesMap; }
+    public void setTalentMaxAdvancesMap(Map<String, Integer> talentMaxAdvancesMap) { this.talentMaxAdvancesMap = talentMaxAdvancesMap; }
+
+    public Map<String, List<Map<String, String>>> getTalentOptionsMap() { return talentOptionsMap; }
+    public void setTalentOptionsMap(Map<String, List<Map<String, String>>> talentOptionsMap) { this.talentOptionsMap = talentOptionsMap; }
+
     public List<String> getAllInventoryNames() { return allInventoryNames; }
     public void setAllInventoryNames(List<String> allInventoryNames) { this.allInventoryNames = allInventoryNames; }
 
@@ -66,6 +82,9 @@ public class SummaryResponseDTO {
 
     public Map<String, String> getMutationDescMap() { return mutationDescMap; }
     public void setMutationDescMap(Map<String, String> mutationDescMap) { this.mutationDescMap = mutationDescMap; }
+
+    public Map<Long, String> getMutationIdToNameMap() { return mutationIdToNameMap; }
+    public void setMutationIdToNameMap(Map<Long, String> mutationIdToNameMap) { this.mutationIdToNameMap = mutationIdToNameMap; }
 
     public List<String> getAllAugmeticNames() { return allAugmeticNames; }
     public void setAllAugmeticNames(List<String> allAugmeticNames) { this.allAugmeticNames = allAugmeticNames; }

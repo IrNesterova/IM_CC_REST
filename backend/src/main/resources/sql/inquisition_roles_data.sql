@@ -27,13 +27,17 @@ SELECT name, description FROM (VALUES
     ('SECURITY AUGUR',           ''),
     ('SHADOW OPERATIVE',         ''),
     ('SUBTLE INFLUENCER',        ''),
-    ('SUBTLE MUTATION',          ''),
+    ('SUBTLE MUTATION',          'Something lies in your genetics that isn''t quite Human, twisting you physically or mentally farther away from the average Imperial citizen. Your Patron may know about your mutation, letting it slide, or be oblivious to it. On face value, you can pass unremarked. But if anyone knew the truth, they''d likely treat you as another abomination. When you gain this Talent, roll for a Positive Mutation and a Negative Mutation on the Subtle Mutations Table, and consult the entries on the Mutations and Malignancies Tables (Imperium Maledictum, pages 222–223) to see their effects. Additionally, whenever you gain a Mutation or Malignancy in the future due to Corruption, you may choose to roll on the Subtle Mutations Table instead, but you must roll for both a Positive and Negative Mutation (roll again if you would gain a duplicate).'),
     ('SUBTLE PSYKER',            ''),
     ('TAINTED VESSEL',           ''),
     ('UNWAVERING WILL',          ''),
     ('YOU DIDN''T SEE ANYTHING', '')
 ) AS v(name, description)
 WHERE NOT EXISTS (SELECT 1 FROM talent t WHERE t.name = v.name);
+
+UPDATE talent
+SET description = 'Something lies in your genetics that isn''t quite Human, twisting you physically or mentally farther away from the average Imperial citizen. Your Patron may know about your mutation, letting it slide, or be oblivious to it. On face value, you can pass unremarked. But if anyone knew the truth, they''d likely treat you as another abomination. When you gain this Talent, roll for a Positive Mutation and a Negative Mutation on the Subtle Mutations Table, and consult the entries on the Mutations and Malignancies Tables (Imperium Maledictum, pages 222–223) to see their effects. Additionally, whenever you gain a Mutation or Malignancy in the future due to Corruption, you may choose to roll on the Subtle Mutations Table instead, but you must roll for both a Positive and Negative Mutation (roll again if you would gain a duplicate).'
+WHERE name = 'SUBTLE MUTATION' AND (description IS NULL OR description = '');
 
 -- Core-book talents referenced in Inquisition roles but not yet in DB
 INSERT INTO talent (name, description)

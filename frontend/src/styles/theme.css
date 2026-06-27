@@ -991,7 +991,7 @@ footer {
 
 .char-id-label {
     font-family: 'Barlow', sans-serif;
-    font-size: 8px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 2px;
     color: var(--muted);
@@ -1000,7 +1000,7 @@ footer {
 
 .char-id-value {
     font-family: 'Barlow', sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     color: var(--ink);
 }
 
@@ -2740,3 +2740,138 @@ footer {
     }
 }
 
+
+
+/* ── Talent choice picker modal ────────────────────────────── */
+.talent-choice-overlay {
+    position: fixed; inset: 0;
+    background: rgba(5,5,4,0.55);
+    z-index: 900;
+    display: flex; align-items: center; justify-content: center;
+}
+.talent-choice-modal {
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 1.5rem;
+    min-width: 340px; max-width: 520px; width: 90%;
+    max-height: 80vh;
+    display: flex; flex-direction: column; gap: .75rem;
+    box-shadow: 0 8px 32px var(--shadow);
+}
+.talent-choice-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem; font-weight: 600;
+    color: #085d65; letter-spacing: .04em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: .5rem;
+}
+.talent-choice-subtitle {
+    font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+}
+.talent-choice-list {
+    overflow-y: auto; display: flex; flex-direction: column; gap: .5rem;
+}
+.talent-choice-option {
+    padding: .65rem .85rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+.talent-choice-option:hover {
+    background: var(--accent);
+    border-color: #085d65;
+}
+.talent-choice-opt-name {
+    font-weight: 600; font-size: .88rem; color: var(--ink); margin-bottom: .25rem;
+}
+.talent-choice-opt-effect {
+    font-size: .8rem; color: var(--muted); line-height: 1.4;
+}
+.talent-choice-empty {
+    font-size: .85rem; color: var(--muted); font-style: italic;
+}
+.talent-choice-cancel {
+    align-self: flex-end;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-size: .8rem;
+    padding: .3rem .8rem; border-radius: 4px; cursor: pointer;
+}
+.talent-choice-cancel:hover { border-color: #085d65; color: #085d65; }
+
+/* ── Hypno-Indoctrination roll modal ───────────────────────── */
+.hypno-modal { min-width: 420px; }
+.hypno-slots { display: flex; flex-direction: column; gap: .6rem; }
+.hypno-slot {
+    padding: .6rem .85rem;
+    border: 1px solid var(--border); border-radius: 4px;
+    display: flex; flex-direction: column; gap: .45rem;
+}
+.hypno-slot--pending { border-color: rgba(160,96,0,.4); background: rgba(160,96,0,.04); }
+.hypno-slot-header {
+    display: flex; align-items: center; gap: .6rem;
+}
+.hypno-slot-label {
+    font-size: .75rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .05em; min-width: 3rem;
+}
+.hypno-roll-num {
+    font-family: 'Cinzel', serif; font-size: 1.05rem; font-weight: 700;
+    color: #085d65; min-width: 2rem;
+}
+.hypno-talent-name { font-weight: 600; font-size: .88rem; color: var(--ink); flex: 1; }
+.hypno-empty { flex: 1; color: var(--muted); font-style: italic; font-size: .85rem; }
+.hypno-roll-btn {
+    margin-left: auto;
+    background: var(--accent); border: 1px solid var(--border-strong);
+    color: #085d65; font-size: .78rem; font-weight: 600;
+    padding: .25rem .7rem; border-radius: 4px; cursor: pointer; white-space: nowrap;
+}
+.hypno-roll-btn:hover { background: rgba(8,93,101,.15); }
+.hypno-sub {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    padding-left: 3.6rem;
+}
+.hypno-sub-label { font-size: .78rem; color: #a06000; }
+.hypno-pick-btn {
+    background: rgba(160,96,0,.08); border: 1px solid rgba(160,96,0,.35);
+    color: #7a4800; font-size: .8rem; font-weight: 600;
+    padding: .2rem .7rem; border-radius: 4px; cursor: pointer;
+}
+.hypno-pick-btn:hover { background: rgba(160,96,0,.18); }
+.hypno-talent-input {
+    width: 100%;
+    background: var(--panel-alt); border: 1px solid var(--border);
+    color: var(--ink); font-size: .82rem;
+    padding: .25rem .5rem; border-radius: 4px; box-sizing: border-box;
+}
+.hypno-talent-input:focus { outline: none; border-color: #085d65; }
+.hypno-ac-drop {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: none;
+    max-height: 160px;
+    overflow-y: auto;
+    z-index: 400;
+    box-shadow: 0 4px 12px var(--shadow);
+}
+.hypno-ac-item {
+    padding: 5px 8px;
+    font-size: .8rem;
+    color: var(--text);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+}
+.hypno-ac-item:last-child { border-bottom: none; }
+.hypno-ac-item:hover { background: rgba(var(--accent-rgb), 0.07); color: var(--ink); }
+.hypno-footer { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .25rem; }
+.hypno-confirm-btn {
+    background: #085d65; border: none; color: var(--on-accent);
+    font-size: .82rem; font-weight: 600;
+    padding: .35rem 1rem; border-radius: 4px; cursor: pointer;
+}
+.hypno-confirm-btn:disabled { opacity: .45; cursor: not-allowed; }
+.hypno-confirm-btn:not(:disabled):hover { background: #0a7080; }

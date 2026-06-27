@@ -1,13 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_faction_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_origins.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_orphan_hotfix.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_roles_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_roles_electro_priest.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_roles_fix.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_roles_lexmechanic.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_roles_transmechanic.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_talents_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_weapons.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/augmetics_data.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/conditions_data.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/critical_wounds_data.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/critical_wounds_link_injuries.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/find_duplicate_inventory.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/find_orphan_inventory.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/fix_interlocutor_inventory.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/fix_mystic_zealot_inventory.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/injuries_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_factions_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_melee_weapons.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_origin_skill_advances.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_origins.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_psychic_powers.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_ranged_weapons.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_specializations_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_talents_data.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inventory_variant_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/merge_inventory_128_into_180.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/merge_inventory_133_into_2.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/mutations_data.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/psychic_powers_data.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/ranged_weapon.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/roles_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/subtle_mutations_table.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/talent_advancements_data.sql" dialect="PostgreSQL" />
   </component>
 </project>

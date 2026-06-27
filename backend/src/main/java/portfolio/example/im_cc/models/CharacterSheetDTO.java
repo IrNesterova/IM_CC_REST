@@ -1,6 +1,7 @@
 package portfolio.example.im_cc.models;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ public class CharacterSheetDTO {
 
     private List<SkillEntry> skills;
     private List<String> talents;
+    private Map<String, Integer> talentAdvances = new HashMap<>();
     private List<String> equipment;
     private List<String> augmetics = new ArrayList<>();
     private List<SpecializationEntry> specializations = new ArrayList<>();
@@ -133,6 +135,9 @@ public class CharacterSheetDTO {
 
     public List<String> getTalents() { return talents; }
     public void setTalents(List<String> talents) { this.talents = talents; }
+
+    public Map<String, Integer> getTalentAdvances() { return talentAdvances; }
+    public void setTalentAdvances(Map<String, Integer> talentAdvances) { this.talentAdvances = talentAdvances; }
 
     public List<String> getEquipment() { return equipment; }
     public void setEquipment(List<String> equipment) { this.equipment = equipment; }

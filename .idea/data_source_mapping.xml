@@ -1,13 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_faction_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_origins.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_orphan_hotfix.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_roles_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_roles_electro_priest.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_roles_fix.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_roles_lexmechanic.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_roles_transmechanic.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_talents_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/am_weapons.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/augmetics_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/conditions_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/critical_wounds_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/critical_wounds_link_injuries.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/find_duplicate_inventory.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/find_orphan_inventory.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/fix_interlocutor_inventory.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/fix_mystic_zealot_inventory.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/injuries_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_factions_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_melee_weapons.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_origin_skill_advances.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_origins.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_psychic_powers.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_ranged_weapons.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_specializations_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inquisition_talents_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/inventory_variant_data.sql" value="98da04c6-5e13-4fee-9f1e-b5fa7d2e76f1" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/merge_inventory_128_into_180.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/merge_inventory_133_into_2.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/mutations_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/psychic_powers_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/ranged_weapon.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/roles_data.sql" value="98da04c6-5e13-4fee-9f1e-b5fa7d2e76f1" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/subtle_mutations_table.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/talent_advancements_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
   </component>
 </project>

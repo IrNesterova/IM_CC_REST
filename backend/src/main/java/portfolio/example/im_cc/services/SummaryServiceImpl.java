@@ -27,6 +27,15 @@ public class SummaryServiceImpl {
     @Autowired RoleTalentChoiceGroupRepository roleTalentChoiceGroupRepository;
     @Autowired RoleInventoryChoiceGroupRepository roleInventoryChoiceGroupRepository;
     @Autowired portfolio.example.im_cc.repositories.EquipmentPackItemRepository equipmentPackItemRepository;
+    @Autowired OriginTalentRepository originTalentRepository;
+    @Autowired OriginInventoryItemRepository originInventoryItemRepository;
+    @Autowired InventoryRepository inventoryRepository;
+    @Autowired FactionGradeRepository factionGradeRepository;
+    @Autowired FactionGradeInventoryRepository factionGradeInventoryRepository;
+    @Autowired FactionGradeTalentRepository factionGradeTalentRepository;
+    @Autowired FactionGradeChoiceGroupRepository factionGradeChoiceGroupRepository;
+    @Autowired FactionGradeInventoryChoiceRepository factionGradeInventoryChoiceRepository;
+    @Autowired FactionGradeTalentChoiceRepository factionGradeTalentChoiceRepository;
 
     private static String resolveItemName(Inventory inv, Map<Long, Long> variantChoices) {
         if (variantChoices == null || inv.getVariants().isEmpty()) return inv.getName();
@@ -74,8 +83,18 @@ public class SummaryServiceImpl {
 
         // ── SKILLS ────────────────────────────────────────────────────
         Map<Long, Integer> combinedSkillAdvances = new HashMap<>();
+        if (ccm.getOriginSkillAdvances() != null) {
+            combinedSkillAdvances.putAll(ccm.getOriginSkillAdvances());
+        }
         if (ccm.getFactionSkillAdvances() != null) {
-            combinedSkillAdvances.putAll(ccm.getFactionSkillAdvances());
+            for (Map.Entry<Long, Integer> e : ccm.getFactionSkillAdvances().entrySet()) {
+                combinedSkillAdvances.merge(e.getKey(), e.getValue(), Integer::sum);
+            }
+        }
+        if (ccm.getFactionGradeSkillAdvances() != null) {
+            for (Map.Entry<Long, Integer> e : ccm.getFactionGradeSkillAdvances().entrySet()) {
+                combinedSkillAdvances.merge(e.getKey(), e.getValue(), Integer::sum);
+            }
         }
         if (ccm.getRoleSkillAdvances() != null) {
             for (Map.Entry<Long, Integer> e : ccm.getRoleSkillAdvances().entrySet()) {
@@ -99,6 +118,38 @@ public class SummaryServiceImpl {
 
         boolean usePack = ccm.getEquipmentPackId() != null;
 
+        // ── ORIGIN TALENTS & ITEMS ────────────────────────────────────
+        if (ccm.getOriginId() != null) {
+            originTalentRepository.findByOriginId(ccm.getOriginId())
+                .forEach(ot -> talents.add(ot.getTalent().getName()));
+            originInventoryItemRepository.findByOriginId(ccm.getOriginId())
+                .forEach(item -> {
+                    if (item.getInventory() != null) {
+                        Inventory inv = item.getInventory();
+                        String itemName = inv.getName();
+                        if (item.getModifiers() != null && !item.getModifiers().isEmpty()) {
+                            String mods = item.getModifiers().stream()
+                                .map(ItemModifier::getName)
+                                .collect(java.util.stream.Collectors.joining(", "));
+                            itemName = itemName + " [" + mods + "]";
+                        }
+                        if (isAugmetic(inv)) augmetics.add(itemName);
+                        else equipment.add(itemName);
+                    }
+                });
+        }
+
+        // ── UNUSUAL AUGMENT — player-chosen augmetic ─────────────────
+        if (ccm.getOriginAugmeticId() != null) {
+            inventoryRepository.findById(ccm.getOriginAugmeticId()).ifPresent(inv -> {
+                String itemName = inv.getName();
+                if (ccm.getOriginAugmeticTrait() != null && !ccm.getOriginAugmeticTrait().isBlank()) {
+                    itemName = itemName + " [" + ccm.getOriginAugmeticTrait() + "]";
+                }
+                augmetics.add(itemName);
+            });
+        }
+
         if (ccm.getFactionId() != null) {
             Faction faction = factionRepository.findById(ccm.getFactionId()).orElseThrow();
 
@@ -113,8 +164,8 @@ public class SummaryServiceImpl {
                             dto.setStartingMoney(qty != null ? qty : inv.getName());
                         } else if (inv != null) {
                             String name = resolveItemName(inv, ccm.getItemVariantChoices());
-                            equipment.add(name);
                             if (isAugmetic(inv)) augmetics.add(name);
+                            else equipment.add(name);
                         }
                     });
             }
@@ -134,12 +185,54 @@ public class SummaryServiceImpl {
                             .ifPresent(fic -> {
                                 Inventory inv = fic.getInventory();
                                 String name = resolveItemName(inv, ccm.getItemVariantChoices());
-                                equipment.add(name);
                                 if (isAugmetic(inv)) augmetics.add(name);
+                                else equipment.add(name);
                             });
                     }
                 }
             }
+        }
+
+        // ── AM GRADE TALENTS & ITEMS ──────────────────────────────────
+        if (ccm.getFactionGradeId() != null) {
+            factionGradeRepository.findById(ccm.getFactionGradeId()).ifPresent(grade -> {
+                factionGradeTalentRepository.findByGrade(grade)
+                    .forEach(gt -> talents.add(gt.getTalent().getName()));
+
+                if (!usePack) {
+                    factionGradeInventoryRepository.findByGrade(grade).forEach(gi -> {
+                        Inventory inv = gi.getInventory();
+                        int qty = gi.getQuantity() != null ? gi.getQuantity() : 1;
+                        String name = resolveItemName(inv, ccm.getItemVariantChoices());
+                        List<String> target = isAugmetic(inv) ? augmetics : equipment;
+                        for (int i = 0; i < qty; i++) target.add(name);
+                    });
+                }
+
+                if (ccm.getFactionGradeChoices() != null) {
+                    for (Map.Entry<Long, List<Long>> entry : ccm.getFactionGradeChoices().entrySet()) {
+                        factionGradeChoiceGroupRepository.findById(entry.getKey()).ifPresent(group -> {
+                            List<Long> selected = entry.getValue();
+                            if (selected == null || selected.isEmpty()) return;
+                            if (group.getChoiceType() == ChoiceType.TALENT) {
+                                factionGradeTalentChoiceRepository.findByChoiceGroup(group).stream()
+                                    .filter(tc -> selected.contains(tc.getTalent().getId()))
+                                    .forEach(tc -> talents.add(tc.getTalent().getName()));
+                            } else if (group.getChoiceType() == ChoiceType.INVENTORY && !usePack) {
+                                factionGradeInventoryChoiceRepository.findByChoiceGroup(group).stream()
+                                    .filter(ic -> selected.contains(ic.getId()))
+                                    .forEach(ic -> {
+                                        Inventory inv = ic.getInventory();
+                                        int qty = ic.getQuantity() != null ? ic.getQuantity() : 1;
+                                        String name = resolveItemName(inv, ccm.getItemVariantChoices());
+                                        List<String> target = isAugmetic(inv) ? augmetics : equipment;
+                                        for (int i = 0; i < qty; i++) target.add(name);
+                                    });
+                            }
+                        });
+                    }
+                }
+            });
         }
 
         if (ccm.getRoleId() != null) {
@@ -150,8 +243,8 @@ public class SummaryServiceImpl {
                     .forEach(ri -> {
                         Inventory inv = ri.getInventory();
                         String name = resolveItemName(inv, ccm.getItemVariantChoices());
-                        equipment.add(name);
                         if (isAugmetic(inv)) augmetics.add(name);
+                        else equipment.add(name);
                     });
             }
 
@@ -173,8 +266,8 @@ public class SummaryServiceImpl {
                                 .forEach(r -> {
                                     Inventory inv = r.getInventory();
                                     String name = resolveItemName(inv, ccm.getItemVariantChoices());
-                                    equipment.add(name);
                                     if (isAugmetic(inv)) augmetics.add(name);
+                                    else equipment.add(name);
                                 });
                         }
                     }
@@ -189,8 +282,8 @@ public class SummaryServiceImpl {
                         int qty = item.getQuantity() != null ? item.getQuantity() : 1;
                         String entry = qty > 1 ? qty + "× " + item.getInventory().getName()
                                                : item.getInventory().getName();
-                        equipment.add(entry);
-                        if (isAugmetic(item.getInventory())) augmetics.add(item.getInventory().getName());
+                        if (isAugmetic(item.getInventory())) augmetics.add(entry);
+                        else equipment.add(entry);
                     } else if (item.getNote() != null) {
                         if (item.getNote().matches("(?i).*\\d+\\s*solars?.*")) {
                             dto.setStartingMoney(item.getNote());
@@ -201,18 +294,29 @@ public class SummaryServiceImpl {
                 });
         }
 
-        dto.setTalents(talents);
+        // Count advances (duplicates = multi-advance talent) then deduplicate
+        Map<String, Integer> talentAdvances = new java.util.LinkedHashMap<>();
+        for (String t : talents) talentAdvances.merge(t, 1, Integer::sum);
+        dto.setTalents(new ArrayList<>(talentAdvances.keySet()));
+        dto.setTalentAdvances(talentAdvances);
         dto.setEquipment(equipment);
         dto.setAugmetics(augmetics);
 
         // ── FATE POINTS ───────────────────────────────────────────────
-        boolean fated = talents.stream().anyMatch(t -> t.equalsIgnoreCase("Fated"));
+        boolean fated = talentAdvances.containsKey("Fated")
+                || talentAdvances.keySet().stream().anyMatch(t -> t.equalsIgnoreCase("Fated"));
         dto.setFatePoints(fated ? 4 : 3);
 
         // ── SPECIALIZATIONS ───────────────────────────────────────────
         List<CharacterSheetDTO.SpecializationEntry> specs = new ArrayList<>();
+        Map<Long, Integer> combinedSpecAdvances = new HashMap<>();
+        if (ccm.getOriginSpecAdvances() != null) combinedSpecAdvances.putAll(ccm.getOriginSpecAdvances());
         if (ccm.getRoleSpecAdvances() != null) {
             for (Map.Entry<Long, Integer> e : ccm.getRoleSpecAdvances().entrySet()) {
+                combinedSpecAdvances.merge(e.getKey(), e.getValue(), Integer::sum);
+            }
+        }
+        for (Map.Entry<Long, Integer> e : combinedSpecAdvances.entrySet()) {
                 if (e.getValue() <= 0) continue;
                 specializationRepository.findById(e.getKey()).ifPresent(spec -> {
                     List<SkillSpecializations> links =
@@ -227,10 +331,16 @@ public class SummaryServiceImpl {
                             ? parentSkill.getCharacteristics().getName() : "";
                         parentSkillAdv = combinedSkillAdvances.getOrDefault(parentSkill.getId(), 0);
                     }
+                    String specDisplayName = spec.getName();
+                    if (ccm.getOriginSpecTopics() != null) {
+                        String topic = ccm.getOriginSpecTopics().get(e.getKey());
+                        if (topic != null && !topic.isBlank()) {
+                            specDisplayName = spec.getName() + ": " + topic;
+                        }
+                    }
                     specs.add(new CharacterSheetDTO.SpecializationEntry(
-                        spec.getName(), skillName, charAbbr, e.getValue(), parentSkillAdv));
+                        specDisplayName, skillName, charAbbr, e.getValue(), parentSkillAdv));
                 });
-            }
         }
         specs.sort(Comparator.comparing(CharacterSheetDTO.SpecializationEntry::getName));
         dto.setSpecializations(specs);

@@ -22,8 +22,12 @@ export default function CabinetPage() {
     const [webhookSaved, setWebhookSaved] = useState(false);
 
     useEffect(() => {
-        getMyCharacters().then(setChars).finally(() => setLoading(false));
-    }, []);
+        if (!user) { navigate('/login'); return; }
+        getMyCharacters()
+            .then(setChars)
+            .catch(err => { if (err?.response?.status === 401) navigate('/login'); })
+            .finally(() => setLoading(false));
+    }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (user?.webhookUrl) setWebhook(user.webhookUrl);

@@ -27,6 +27,22 @@ public class FactionServiceImpl implements FactionService {
     FactionInventoryChoiceRepository inventoryChoiceRepository;
     @Autowired
     FactionTalentChoiceRepository talentChoiceRepository;
+    @Autowired
+    FactionGradeRepository factionGradeRepository;
+    @Autowired
+    FactionGradeCharChoiceRepository gradeCharChoiceRepository;
+    @Autowired
+    FactionGradeSkillRepository gradeSkillRepository;
+    @Autowired
+    FactionGradeInventoryRepository gradeInventoryRepository;
+    @Autowired
+    FactionGradeTalentRepository gradeTalentRepository;
+    @Autowired
+    FactionGradeChoiceGroupRepository gradeChoiceGroupRepository;
+    @Autowired
+    FactionGradeInventoryChoiceRepository gradeInventoryChoiceRepository;
+    @Autowired
+    FactionGradeTalentChoiceRepository gradeTalentChoiceRepository;
 
     @Override
     public List<Faction> getAllFactions() {
@@ -76,7 +92,8 @@ public class FactionServiceImpl implements FactionService {
                         .getInventoryList().add(fi));
 
         // === 1 запрос: все группы выборов ===
-        List<FactionChoiceGroup> allGroups = factionChoiceGroupRepository.findByFactionIn(factionList);
+        List<FactionChoiceGroup> allGroups = factionChoiceGroupRepository.findByFactionIn(factionList)
+                .stream().distinct().collect(Collectors.toList());
         Map<Long, FactionChoiceGroup> groupMap = allGroups.stream()
                 .collect(Collectors.toMap(FactionChoiceGroup::getId, g -> g));
 
@@ -121,8 +138,67 @@ public class FactionServiceImpl implements FactionService {
         // Собираем options в группы
         allGroups.forEach(g -> g.setOptions(new ArrayList<>(optionsByGroup.get(g.getId()).values())));
 
+        // === GRADES (только AM-фракции) ===
+        List<Faction> amFactions = factionList.stream()
+                .filter(f -> f.getSourceBook() == SourceBook.AM)
+                .collect(Collectors.toList());
+        if (!amFactions.isEmpty()) {
+            loadGrades(amFactions, factionMap);
+        }
 
         return factionList;
+    }
+
+    private void loadGrades(List<Faction> amFactions, Map<Long, Faction> factionMap) {
+        List<FactionGrade> allGrades = factionGradeRepository.findByFactionIn(amFactions);
+        Map<Long, FactionGrade> gradeMap = allGrades.stream()
+                .collect(Collectors.toMap(FactionGrade::getId, g -> g));
+
+        allGrades.forEach(g -> {
+            g.setCharChoices(new ArrayList<>());
+            g.setAllowedSkills(new ArrayList<>());
+            g.setFixedInventory(new ArrayList<>());
+            g.setFixedTalents(new ArrayList<>());
+            g.setChoiceGroups(new ArrayList<>());
+            Faction f = factionMap.get(g.getFaction().getId());
+            if (f.getGrades() == null) f.setGrades(new ArrayList<>());
+            f.getGrades().add(g);
+        });
+
+        gradeCharChoiceRepository.findByGradeIn(allGrades)
+                .forEach(gcc -> gradeMap.get(gcc.getGrade().getId())
+                        .getCharChoices().add(gcc.getCharacteristics()));
+
+        gradeSkillRepository.findByGradeIn(allGrades)
+                .forEach(gs -> gradeMap.get(gs.getGrade().getId())
+                        .getAllowedSkills().add(gs.getSkill()));
+
+        gradeInventoryRepository.findByGradeIn(allGrades)
+                .forEach(gi -> gradeMap.get(gi.getGrade().getId())
+                        .getFixedInventory().add(gi));
+
+        gradeTalentRepository.findByGradeIn(allGrades)
+                .forEach(gt -> gradeMap.get(gt.getGrade().getId())
+                        .getFixedTalents().add(gt.getTalent()));
+
+        List<FactionGradeChoiceGroup> allChoiceGroups = gradeChoiceGroupRepository.findByGradeIn(allGrades)
+                .stream().distinct().collect(Collectors.toList());
+        Map<Long, FactionGradeChoiceGroup> choiceGroupMap = allChoiceGroups.stream()
+                .collect(Collectors.toMap(FactionGradeChoiceGroup::getId, cg -> cg));
+
+        allChoiceGroups.forEach(cg -> {
+            cg.setInventoryOptions(new ArrayList<>());
+            cg.setTalentOptions(new ArrayList<>());
+            gradeMap.get(cg.getGrade().getId()).getChoiceGroups().add(cg);
+        });
+
+        gradeInventoryChoiceRepository.findByChoiceGroupIn(allChoiceGroups)
+                .forEach(ic -> choiceGroupMap.get(ic.getChoiceGroup().getId())
+                        .getInventoryOptions().add(ic));
+
+        gradeTalentChoiceRepository.findByChoiceGroupIn(allChoiceGroups)
+                .forEach(tc -> choiceGroupMap.get(tc.getChoiceGroup().getId())
+                        .getTalentOptions().add(tc.getTalent()));
     }
     @Override
     public Faction getById(Long id) {
@@ -226,6 +302,12 @@ public class FactionServiceImpl implements FactionService {
 
         groups.forEach(g -> g.setOptions(new ArrayList<>(optionsByGroup.get(g.getId()).values())));
         faction.setChoiceGroups(groups);
+
+        // === GRADES (только AM) ===
+        if (faction.getSourceBook() == SourceBook.AM) {
+            Map<Long, Faction> singleMap = Map.of(faction.getId(), faction);
+            loadGrades(List.of(faction), singleMap);
+        }
 
         return faction;
     }

@@ -10,7 +10,7 @@ import java.util.List;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Faction {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     public void setId(Long id) {
@@ -26,6 +26,10 @@ public class Faction {
 
     @Column(columnDefinition = "text")
     private String influenceDescription;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_book")
+    private SourceBook sourceBook;
 
 
     @Transient
@@ -43,6 +47,9 @@ public class Faction {
     private List<Characteristics> secondaryCharacteristics;
     @Transient
     private List<FactionChoiceGroup> choiceGroups;
+
+    @Transient
+    private List<FactionGrade> grades;
 
     public List<Talent> getTalentList() {
         return talentList;
@@ -76,6 +83,9 @@ public class Faction {
         this.name = name;
     }
 
+    public SourceBook getSourceBook() { return sourceBook; }
+    public void setSourceBook(SourceBook sourceBook) { this.sourceBook = sourceBook; }
+
     public List<Characteristics> getPrimaryCharacteristics() {
         return primaryCharacteristics;
     }
@@ -99,4 +109,7 @@ public class Faction {
     public void setChoiceGroups(List<FactionChoiceGroup> choiceGroups) {
         this.choiceGroups = choiceGroups;
     }
+
+    public List<FactionGrade> getGrades() { return grades; }
+    public void setGrades(List<FactionGrade> grades) { this.grades = grades; }
 }

@@ -62,6 +62,11 @@ export default function ProgressBar() {
             return (
                 <div className="tip-stack">
                     <TipRow label="Characteristics" value={ccm._originCharBonuses}/>
+                    <TipRow label="Skill" value={ccm._originSkillSummary}/>
+                    <TipRow label="Spec" value={ccm._originSpecSummary}/>
+                    <TipRow label="Talents" value={ccm._originTalents}/>
+                    <TipRow label="Items" value={ccm._originItems}/>
+                    <TipRow label="Mutations" value={ccm._subtleMutationSummary}/>
                 </div>
             );
         }
@@ -94,7 +99,7 @@ export default function ProgressBar() {
             {STEPS.map((step, i) => {
                 const active = pathname === step.path;
                 const done = isDone(step.path);
-                const canNav = active || done;
+                const canNav = active || done || (step.path === '/summary' && ccm.roleId != null);
                 const cls = `wizard-step${active ? ' active' : done ? ' done' : ' pending'}`;
                 const dot = active ? '●' : done ? '✓' : '○';
                 const value = getValue(step.path);

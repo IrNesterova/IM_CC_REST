@@ -32,6 +32,10 @@ public class PsychicPower {
     @JoinColumn(name = "discipline_id")
     private PsychicDiscipline discipline;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_book")
+    private SourceBook sourceBook;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -58,4 +62,7 @@ public class PsychicPower {
 
     public PsychicDiscipline getDiscipline() { return discipline; }
     public void setDiscipline(PsychicDiscipline discipline) { this.discipline = discipline; }
+
+    public SourceBook getSourceBook() { return sourceBook; }
+    public void setSourceBook(SourceBook sourceBook) { this.sourceBook = sourceBook; }
 }

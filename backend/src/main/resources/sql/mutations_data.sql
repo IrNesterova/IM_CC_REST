@@ -1,86 +1,168 @@
 -- Imperium Maledictum Core Rulebook pp. 222–223
 -- Mutations (roll d100)
 INSERT INTO mutation (name, description, mutation_type, d100_range) VALUES
-('Witch-mark',           'The character develops an obvious physical mark that betrays their connection to the warp — a third eye, an unblinking pupil on the palm, or a brand that seems to glow with inner light. All Interaction tests made against characters who can see the mark suffer a –10 penalty, but the character gains a +10 bonus to Intimidation tests.',
+('Witch-mark',
+ 'A small brand or mark of a specific chaos god or the eight pointed star forms upon your flesh. Roll on the Hit Location table (see page 211) to determine where it appears.',
  'mutation', '01–05'),
-('Wasted Frame',         'The character''s body withers and wastes away, their flesh becoming sunken and pallid. The character''s Strength Bonus is reduced by 1, but the character''s Agility Bonus is increased by 1.',
+('Wasted Frame',
+ 'Your pallor becomes corpse-like and your muscles waste away. Your Toughness is permanently reduced by 10 and Advances in Athletics or Fortitude now cost you double the XP.',
  'mutation', '06–10'),
-('Lashing Tentacle',     'A sinuous tentacle erupts from the character''s body — perhaps from the wrist, shoulder, or back. The tentacle can be used to make unarmed attacks with a Damage of 1d10+Strength Bonus (I), and can be used to perform the Disarm and Grapple actions.',
+('Lashing Tentacle',
+ 'A tentacle sprouts from your body. Roll on the Hit Location table (page 211) to determine where it appears. If it appears on a limb, it replaces it. Unarmed attacks made with the Tentacle gain the Reach and Inflict (Restrained) Traits.',
  'mutation', '11–15'),
-('Inhuman Beauty',       'The character takes on an eerie, otherworldly beauty that makes mortals uneasy. The character gains a +10 bonus to Charm tests, but all Interaction tests made by characters who suspect the character''s nature suffer a –10 penalty.',
+('Inhuman Beauty',
+ 'Your skin becomes uncannily flawless and people cannot help but stare. You gain +10 Fellowship whenever people can see your face, and your skin never blemishes or scars.',
  'mutation', '16–20'),
-('Iron Skin',            'The character''s skin thickens and hardens, taking on the texture and colour of rusted iron. The character gains 1 point of Armour on all locations, but suffers a –10 penalty to all Agility tests.',
+('Iron Skin',
+ 'Metal scales or ore deposits spread across your body. You gain +2 Armour on all locations, but your Agility is permanently reduced by 10.',
  'mutation', '21–25'),
-('Extra Mouth',          'An additional mouth erupts somewhere on the character''s body — perhaps on their cheek, palm, or stomach. This mouth speaks unbidden, sometimes voicing the character''s hidden thoughts or whispering the secrets of others.',
+('Extra Mouth',
+ 'You grow an extra mouth. Roll on the Hit Location table (page 211) to determine where it appears. The mouth seems to act of its own accord, whispering and infrequently screaming in a language you don''t know.',
  'mutation', '26–30'),
-('Searing Blood',        'The character''s blood becomes superheated and caustic. Whenever the character suffers a hit that causes Blood Loss, each creature within 1 metre suffers 1d5 (E) Damage with the Spray quality.',
+('Searing Blood',
+ 'Your veins carry searing acids or boiling tar in place of blood, though somehow the corrosive effects do not burn your own flesh. Whenever you take Wounds or suffer the Bleeding Condition, all creatures within Immediate Range suffer Damage equal to the Wounds lost.',
  'mutation', '31–35'),
-('Living Shadow',        'The character''s shadow moves independently, sometimes acting in ways that don''t match the character''s movements. Once per scene, the character can use their shadow to perform a Sleight of Hand or Stealth test.',
+('Living Shadow',
+ 'Your shadow does not match your own movements, and it looms large and visible regardless of the light. Whenever you are in darkness and cannot see it, you have the unshakeable feeling it is doing something terrible.',
  'mutation', '36–40'),
-('Swollen Brute',        'The character''s body swells with unnatural muscle and bloated flesh. The character''s Strength Bonus is increased by 1, but they suffer a –10 penalty to Agility tests and their Size increases by one step.',
+('Swollen Brute',
+ 'You become bloated, your muscles expanding and your form becoming excessively corpulent or disturbingly muscular (or perhaps both). You have Advantage on Opposed Athletics Tests.',
  'mutation', '41–45'),
-('Extra Eye',            'An additional eye appears on the character''s body — often on the forehead, palm, or the back of the head. The character gains a +10 bonus to Awareness tests and cannot be Surprised.',
+('Extra Eye',
+ 'An eye appears somewhere on your body. Roll on the Hit Location table (page 211) to determine where it appears. The eye sees things you cannot. When you look through it, you count as using a Photo-Visors (see page 144).',
  'mutation', '46–50'),
-('Twisted Horns',        'Bony protrusions erupt from the character''s skull, growing into twisted horns. The character can make a Gore attack (Damage 1d10+Strength Bonus, I, Primitive) and gains a +10 bonus to Intimidation tests.',
+('Twisted Horns',
+ 'Bony growths sprout from your head. Unarmed attacks made with your horns do not have the Ineffective Trait.',
  'mutation', '51–55'),
-('Daemonic Visage',      'The character''s face twists into something inhuman — their eyes glow, their teeth become fangs, and their features warp into a terrifying mask. The character gains a +20 bonus to Intimidation tests, but suffers a –20 penalty to all other Interaction tests unless masked.',
+('Daemonic Visage',
+ 'Your appearance twists into something bestial or abhorrent. You suffer −2 SL on Fellowship Tests whenever people can see your face, with the exception of Rapport (Intimidation) Tests, which instead gain +2 SL.',
  'mutation', '56–60'),
-('Digitigrade Legs',     'The character''s legs reshape themselves, becoming digitigrade like those of an animal. The character''s Movement is increased by 1, and they gain a +10 bonus to Athletics tests involving running or jumping.',
+('Digitigrade Legs',
+ 'Your legs twist into a muscular form that greatly enhances your agility. You have Advantage on Athletics Tests to run, leap, or otherwise use your legs.',
  'mutation', '61–65'),
-('Feathers',             'The character grows a covering of feathers across part or all of their body. The character gains a +10 bonus to Stealth tests in environments where the feathers provide camouflage, and is immune to the effects of Extreme Cold.',
+('Feathers',
+ 'Feathers grow from your body in a spotty fashion. Roll on the Hit Location table (page 211) twice to determine where they appear. They may be of any colour, or multiple colours.',
  'mutation', '66–70'),
-('Warp Claws',           'The character''s fingers extend into razor-sharp talons of solidified warp energy. The character can make Claw attacks (Damage 1d10+Strength Bonus, R, Tearing) and can affect creatures that are immune to mundane weapons.',
+('Warp Claws',
+ 'Your fingers sprout and sharpen into horrific dark talons. Your Unarmed attacks lose the Ineffective Trait and gain Rend (1).',
  'mutation', '71–75'),
-('Photonic Irregularity', 'The character partially phases in and out of reality. Ranged attacks against the character suffer a –10 penalty, and the character can pass through objects no more than a few centimetres thick once per round.',
+('Photonic Irregularity',
+ 'You do not appear in mirrors or other reflective surfaces, or in video recordings that use the visual light spectrum.',
  'mutation', '76–80'),
-('Festering Wound',      'A wound appears on the character''s body that refuses to heal, constantly weeping foul fluid. The character permanently loses 1 Wound, but any creature that grapples with the character must pass a Toughness test or contract a Minor Disease.',
+('Festering Wound',
+ 'One of your old wounds returns and refuses to heal, no matter what you do. A Critical Wound you received some time in the past returns and cannot be healed. You are considered to always have one untreated Critical Wound.',
  'mutation', '81–85'),
-('Lolling Tongue',       'The character''s tongue grows to an enormous length and takes on a life of its own, constantly writhing and tasting the air. The character gains a +10 bonus to Awareness tests based on smell or taste, and can speak in a disturbing, sibilant manner that grants a +5 bonus to Intimidation.',
+('Lolling Tongue',
+ 'Your tongue becomes unwieldy and spasms erratically. You suffer −10 to all Tests that require speech.',
  'mutation', '86–90'),
-('Fleshmetal',           'Patches of the character''s skin transform into a dull metallic substance. The character gains 2 points of Armour on the affected locations and is immune to the effects of Extreme Heat on those areas, but their Agility is reduced by 5.',
+('Fleshmetal',
+ 'Your armour and cybernetic implants fuse with your flesh and can even regenerate. You can repair items merged with you using your Fortitude Skill. Tests to repair these items using Tech or other conventional methods have Disadvantage. You cannot change your armour or don additional armour.',
  'mutation', '91–95'),
-('Warp Regeneration',    'The character develops an uncanny ability to regenerate damage. At the start of each of the character''s turns, they regain 1 lost Wound. This regeneration does not function if the character is at 0 Wounds or is suffering from a Critical Wound.',
+('Warp Regeneration',
+ 'Corruption seethes through your flesh, sewing your body back together time and time again whether you will it or not. Your Fate is reduced to 0 and you cannot regain Fate. However, you always regenerate 1 Wound at the beginning of your turn. In addition, any lost limbs regrow after 1 day.',
  'mutation', '96–00');
+
+-- Update existing mutation descriptions to correct rulebook text
+UPDATE mutation SET description = 'A small brand or mark of a specific chaos god or the eight pointed star forms upon your flesh. Roll on the Hit Location table (see page 211) to determine where it appears.' WHERE name = 'Witch-mark';
+UPDATE mutation SET description = 'Your pallor becomes corpse-like and your muscles waste away. Your Toughness is permanently reduced by 10 and Advances in Athletics or Fortitude now cost you double the XP.' WHERE name = 'Wasted Frame';
+UPDATE mutation SET description = 'A tentacle sprouts from your body. Roll on the Hit Location table (page 211) to determine where it appears. If it appears on a limb, it replaces it. Unarmed attacks made with the Tentacle gain the Reach and Inflict (Restrained) Traits.' WHERE name = 'Lashing Tentacle';
+UPDATE mutation SET description = 'Your skin becomes uncannily flawless and people cannot help but stare. You gain +10 Fellowship whenever people can see your face, and your skin never blemishes or scars.' WHERE name = 'Inhuman Beauty';
+UPDATE mutation SET description = 'Metal scales or ore deposits spread across your body. You gain +2 Armour on all locations, but your Agility is permanently reduced by 10.' WHERE name = 'Iron Skin';
+UPDATE mutation SET description = 'You grow an extra mouth. Roll on the Hit Location table (page 211) to determine where it appears. The mouth seems to act of its own accord, whispering and infrequently screaming in a language you don''t know.' WHERE name = 'Extra Mouth';
+UPDATE mutation SET description = 'Your veins carry searing acids or boiling tar in place of blood, though somehow the corrosive effects do not burn your own flesh. Whenever you take Wounds or suffer the Bleeding Condition, all creatures within Immediate Range suffer Damage equal to the Wounds lost.' WHERE name = 'Searing Blood';
+UPDATE mutation SET description = 'Your shadow does not match your own movements, and it looms large and visible regardless of the light. Whenever you are in darkness and cannot see it, you have the unshakeable feeling it is doing something terrible.' WHERE name = 'Living Shadow';
+UPDATE mutation SET description = 'You become bloated, your muscles expanding and your form becoming excessively corpulent or disturbingly muscular (or perhaps both). You have Advantage on Opposed Athletics Tests.' WHERE name = 'Swollen Brute';
+UPDATE mutation SET description = 'An eye appears somewhere on your body. Roll on the Hit Location table (page 211) to determine where it appears. The eye sees things you cannot. When you look through it, you count as using a Photo-Visors (see page 144).' WHERE name = 'Extra Eye';
+UPDATE mutation SET description = 'Bony growths sprout from your head. Unarmed attacks made with your horns do not have the Ineffective Trait.' WHERE name = 'Twisted Horns';
+UPDATE mutation SET description = 'Your appearance twists into something bestial or abhorrent. You suffer −2 SL on Fellowship Tests whenever people can see your face, with the exception of Rapport (Intimidation) Tests, which instead gain +2 SL.' WHERE name = 'Daemonic Visage';
+UPDATE mutation SET description = 'Your legs twist into a muscular form that greatly enhances your agility. You have Advantage on Athletics Tests to run, leap, or otherwise use your legs.' WHERE name = 'Digitigrade Legs';
+UPDATE mutation SET description = 'Feathers grow from your body in a spotty fashion. Roll on the Hit Location table (page 211) twice to determine where they appear. They may be of any colour, or multiple colours.' WHERE name = 'Feathers';
+UPDATE mutation SET description = 'Your fingers sprout and sharpen into horrific dark talons. Your Unarmed attacks lose the Ineffective Trait and gain Rend (1).' WHERE name = 'Warp Claws';
+UPDATE mutation SET description = 'You do not appear in mirrors or other reflective surfaces, or in video recordings that use the visual light spectrum.' WHERE name = 'Photonic Irregularity';
+UPDATE mutation SET description = 'One of your old wounds returns and refuses to heal, no matter what you do. A Critical Wound you received some time in the past returns and cannot be healed. You are considered to always have one untreated Critical Wound.' WHERE name = 'Festering Wound';
+UPDATE mutation SET description = 'Your tongue becomes unwieldy and spasms erratically. You suffer −10 to all Tests that require speech.' WHERE name = 'Lolling Tongue';
+UPDATE mutation SET description = 'Your armour and cybernetic implants fuse with your flesh and can even regenerate. You can repair items merged with you using your Fortitude Skill. Tests to repair these items using Tech or other conventional methods have Disadvantage. You cannot change your armour or don additional armour.' WHERE name = 'Fleshmetal';
+UPDATE mutation SET description = 'Corruption seethes through your flesh, sewing your body back together time and time again whether you will it or not. Your Fate is reduced to 0 and you cannot regain Fate. However, you always regenerate 1 Wound at the beginning of your turn. In addition, any lost limbs regrow after 1 day.' WHERE name = 'Warp Regeneration';
+UPDATE mutation SET description = 'You grow increasingly cruel, callous, and vindictive. Whenever you gain Corruption, you gain 1 additional Corruption.' WHERE name = 'Dark-hearted';
+UPDATE mutation SET description = 'You develop an overwhelming desire to consume an inedible or socially unacceptable substance. If you go longer than one week without sating your craving, you become Fatigued until you do so.' WHERE name = 'Awful Cravings';
+UPDATE mutation SET description = 'You become obsessed with whatever caused this mutation, and struggle to focus on anything else when left alone. During downtime, you must make a Difficult (−10) Willpower (Discipline) Test to take an Endeavour.' WHERE name = 'Overwhelming Obsession';
+UPDATE mutation SET description = 'Chance seems to mock you at the most crucial of opportunities. Whenever you Spend Fate, roll 1d10. On a result of 7–10, the Fate point has no effect but is spent anyway.' WHERE name = 'Ill-fortuned';
+UPDATE mutation SET description = 'You feel sick at the sight, sound, or smell of something otherwise innocuous, such as prayer books and holy items, cherubs, Human laughter, or fresh food. When you encounter an object of your revulsion, you are Stunned until the end of your next turn.' WHERE name = 'Irrational Nausea';
+UPDATE mutation SET description = 'You grow increasingly distrustful, expecting betrayal at any moment from even your closest allies. You can no longer use or gain the benefits of the Help action (see page 208).' WHERE name = 'Unshakable Paranoia';
+UPDATE mutation SET description = 'Unintelligible alien and unnatural voices constantly mutter in your ears. You suffer Disadvantage on Awareness (Sound) Tests.' WHERE name = 'Dark Whispers';
+UPDATE mutation SET description = 'You have memories of events that — according to everyone else — never happened. It is impossible for you to tell which of your memories are true and which are false.' WHERE name = 'Phantom Memories';
+UPDATE mutation SET description = 'Your character feels horror and revulsion at some innocuous, even good, thing. Work with your GM to choose the object of your fear. When you encounter it, you must succeed at a Challenging (+0) Discipline (Fear) Test or become Frightened.' WHERE name = 'Irrational Fear';
+UPDATE mutation SET description = 'You suffer from inexplicable blackouts. Whenever you roll a Fumble on a Test, you must make a Challenging (+0) Fortitude (Endurance) Test or become Incapacitated for 1d10 rounds.' WHERE name = 'Blackouts';
+UPDATE mutation SET description = 'You become obsessed with the sight of blood and bodily harm. If a character within your Zone, including yourself, suffers a Critical Wound, you must make a Challenging (+0) Discipline Test or be Stunned until the end of your next turn.' WHERE name = 'Morbid Fascination';
+UPDATE mutation SET description = 'You become hyper aware of all the subtle tics and tells that give away mortal desires. You have Advantage on all Intuition (People) Tests.' WHERE name = 'Wheels Within Wheels';
+UPDATE mutation SET description = 'You constantly feel like something revolting is crawling beneath your skin.' WHERE name = 'Inescapable Itch';
+UPDATE mutation SET description = 'If you close your eyes, you can see the faint skein of the immaterium simmering beneath reality. You gain 1 Advance in Awareness (Psyniscience), even if you do not have the Psyker Talent.' WHERE name = 'Warp Sense';
+UPDATE mutation SET description = 'Every shadow you see appears to crawl with shimmering eyes that watch you. You must make a Difficult (−10) Discipline (Fear) Test to enter shadows or complete darkness, or become Frightened.' WHERE name = 'The Eyes';
+UPDATE mutation SET description = 'The unspeakable horrors of the void shimmer across your eyes. Creatures who meet your unobstructed gaze must make a Challenging (+0) Willpower (Fear) Test or become Frightened of you.' WHERE name = 'Void Gaze';
+UPDATE mutation SET description = 'Everything you eat tastes like ash, blood, or bones.' WHERE name = 'Ashen Taste';
+UPDATE mutation SET description = 'You are granted brief flashes of agonies yet to come. Once per day, when you would suffer a Critical Wound as the result of an attack, you may claim that you foresaw this moment. You automatically avoid the attack and take no damage, but gain 1 Corruption as you steer closer towards a twisted fate.' WHERE name = 'Dark Prophecies';
+UPDATE mutation SET description = 'You have gained the attention of a daemonic entity that seeks to manipulate your fate to their own unknowable end. You gain an additional Fate point, but whenever you Spend or Burn Fate (see page 220), you count as experiencing Minor Exposure to Corruption.' WHERE name = 'Warp Patron';
+UPDATE mutation SET description = 'Your connection to the Warp is violently wrenched open. You gain the Psyker Talent (page 114) and one random Minor Psychic Power (page 160). Whenever you roll on the Perils of the Warp table (page 165) you gain 1 additional Corruption.' WHERE name = 'Psychic Awakening';
 
 -- Malignancies (roll d100)
 INSERT INTO mutation (name, description, mutation_type, d100_range) VALUES
-('Dark-hearted',             'The character''s emotions become muted and their capacity for empathy withers. The character gains a +10 bonus to resist Fear and Pinning, but suffers a –10 penalty to all Fellowship-based tests.',
+('Dark-hearted',
+ 'You grow increasingly cruel, callous, and vindictive. Whenever you gain Corruption, you gain 1 additional Corruption.',
  'malignancy', '01–05'),
-('Awful Cravings',           'The character develops an intense and disturbing craving — perhaps for raw meat, grave soil, or stranger things. Once per day, if the character cannot satisfy their craving, they suffer 1d5 Corruption Points.',
+('Awful Cravings',
+ 'You develop an overwhelming desire to consume an inedible or socially unacceptable substance. If you go longer than one week without sating your craving, you become Fatigued until you do so.',
  'malignancy', '06–10'),
-('Overwhelming Obsession',   'The character becomes fixated on a single subject or activity. The character gains a +10 bonus to any tests related to their obsession, but must pass a Willpower test to focus on anything else while the obsession is present.',
+('Overwhelming Obsession',
+ 'You become obsessed with whatever caused this mutation, and struggle to focus on anything else when left alone. During downtime, you must make a Difficult (−10) Willpower (Discipline) Test to take an Endeavour.',
  'malignancy', '11–15'),
-('Ill-fortuned',             'Misfortune seems to follow the character wherever they go. Once per session, the GM may force the character to re-roll any one successful test, taking the worse result.',
+('Ill-fortuned',
+ 'Chance seems to mock you at the most crucial of opportunities. Whenever you Spend Fate, roll 1d10. On a result of 7–10, the Fate point has no effect but is spent anyway.',
  'malignancy', '16–20'),
-('Irrational Nausea',        'The character experiences waves of uncontrollable nausea triggered by seemingly random stimuli. Once per session, at the GM''s discretion, the character must pass a Toughness test or spend their next turn retching and unable to act.',
+('Irrational Nausea',
+ 'You feel sick at the sight, sound, or smell of something otherwise innocuous, such as prayer books and holy items, cherubs, Human laughter, or fresh food. When you encounter an object of your revulsion, you are Stunned until the end of your next turn.',
  'malignancy', '21–25'),
-('Unshakable Paranoia',      'The character becomes convinced that they are being watched and plotted against. The character suffers a –10 penalty to all Interaction tests and must pass a Willpower test to trust any new individual.',
+('Unshakable Paranoia',
+ 'You grow increasingly distrustful, expecting betrayal at any moment from even your closest allies. You can no longer use or gain the benefits of the Help action (see page 208).',
  'malignancy', '26–30'),
-('Dark Whispers',            'The character hears whispers from the warp that only they can hear. These whispers occasionally provide useful information, granting a +10 bonus to Forbidden Lore (Warp) tests, but the character must pass a Willpower test each session or gain 1 Corruption Point.',
+('Dark Whispers',
+ 'Unintelligible alien and unnatural voices constantly mutter in your ears. You suffer Disadvantage on Awareness (Sound) Tests.',
  'malignancy', '31–35'),
-('Phantom Memories',         'The character is haunted by vivid memories of events that never happened — or that happened to someone else entirely. Once per session, the character must pass a Willpower test or become Stunned for one round as a memory overwhelms them.',
+('Phantom Memories',
+ 'You have memories of events that — according to everyone else — never happened. It is impossible for you to tell which of your memories are true and which are false.',
  'malignancy', '36–40'),
-('Irrational Fear',          'The character develops an intense, irrational fear of something mundane. Whenever they encounter their fear, they must pass a Fear test as though confronting a creature with Fear (1).',
+('Irrational Fear',
+ 'Your character feels horror and revulsion at some innocuous, even good, thing. Work with your GM to choose the object of your fear. When you encounter it, you must succeed at a Challenging (+0) Discipline (Fear) Test or become Frightened.',
  'malignancy', '41–45'),
-('Blackouts',                'The character experiences episodes where they lose consciousness or enter a fugue state. Once per session, the GM may declare that the character experienced a blackout, with no memory of what occurred during it.',
+('Blackouts',
+ 'You suffer from inexplicable blackouts. Whenever you roll a Fumble on a Test, you must make a Challenging (+0) Fortitude (Endurance) Test or become Incapacitated for 1d10 rounds.',
  'malignancy', '46–50'),
-('Morbid Fascination',       'The character develops an unhealthy fascination with death and suffering. The character gains a +10 bonus to Medicae tests, but must pass a Willpower test to avoid stopping to study the dead or dying when encountered.',
+('Morbid Fascination',
+ 'You become obsessed with the sight of blood and bodily harm. If a character within your Zone, including yourself, suffers a Critical Wound, you must make a Challenging (+0) Discipline Test or be Stunned until the end of your next turn.',
  'malignancy', '51–55'),
-('Wheels Within Wheels',     'The character becomes obsessed with finding hidden patterns and conspiracies. They gain a +10 bonus to Scrutiny tests, but must pass a Willpower test to accept that something is exactly as it appears.',
+('Wheels Within Wheels',
+ 'You become hyper aware of all the subtle tics and tells that give away mortal desires. You have Advantage on all Intuition (People) Tests.',
  'malignancy', '56–60'),
-('Inescapable Itch',         'The character suffers from a constant, maddening itch that cannot be relieved. The character suffers a –5 penalty to all Agility tests as they are constantly distracted, and must pass a Willpower test to maintain concentration for extended periods.',
+('Inescapable Itch',
+ 'You constantly feel like something revolting is crawling beneath your skin.',
  'malignancy', '61–65'),
-('Warp Sense',               'The character develops an uncomfortable sensitivity to warp phenomena. The character can detect the presence of psykers and warp entities within 10 metres, but must pass a Willpower test when in the presence of strong warp emanations or gain 1 Corruption Point.',
+('Warp Sense',
+ 'If you close your eyes, you can see the faint skein of the immaterium simmering beneath reality. You gain 1 Advance in Awareness (Psyniscience), even if you do not have the Psyker Talent.',
  'malignancy', '66–70'),
-('The Eyes',                 'The character becomes aware that something is watching them through other people''s eyes. The character suffers a –10 penalty to Willpower tests in crowded areas and gains a +10 bonus to Awareness when alone.',
+('The Eyes',
+ 'Every shadow you see appears to crawl with shimmering eyes that watch you. You must make a Difficult (−10) Discipline (Fear) Test to enter shadows or complete darkness, or become Frightened.',
  'malignancy', '71–75'),
-('Void Gaze',                'The character''s eyes take on an unsettling quality — distant, unfocused, as though seeing something beyond the physical world. The character gains a +10 bonus to resist Fear but suffers a –10 penalty to social tests as others find their gaze deeply unsettling.',
+('Void Gaze',
+ 'The unspeakable horrors of the void shimmer across your eyes. Creatures who meet your unobstructed gaze must make a Challenging (+0) Willpower (Fear) Test or become Frightened of you.',
  'malignancy', '76–80'),
-('Ashen Taste',              'All food and drink tastes of ash to the character. They must pass a Toughness test each day or suffer 1 level of Fatigue as their appetite fails. They gain a +10 bonus to resist ingested poisons.',
+('Ashen Taste',
+ 'Everything you eat tastes like ash, blood, or bones.',
  'malignancy', '81–85'),
-('Dark Prophecies',          'The character receives unwanted visions of terrible futures. Once per session, the GM may reveal a brief, cryptic vision of what is to come. Once per session, the character may re-roll one test, but must accept the new result.',
+('Dark Prophecies',
+ 'You are granted brief flashes of agonies yet to come. Once per day, when you would suffer a Critical Wound as the result of an attack, you may claim that you foresaw this moment. You automatically avoid the attack and take no damage, but gain 1 Corruption as you steer closer towards a twisted fate.',
  'malignancy', '86–90'),
-('Warp Patron',              'Something in the warp has taken notice of the character and considers itself their patron. The character may call on this patron once per session for a +20 bonus to one test, but doing so costs 1d5 Corruption Points.',
+('Warp Patron',
+ 'You have gained the attention of a daemonic entity that seeks to manipulate your fate to their own unknowable end. You gain an additional Fate point, but whenever you Spend or Burn Fate (see page 220), you count as experiencing Minor Exposure to Corruption.',
  'malignancy', '91–95'),
-('Psychic Awakening',        'Latent psychic potential erupts in the character. The character gains the Psyniscience skill at Rank 1 and may manifest one minor psychic power chosen by the GM, but gains 1d5 Corruption Points immediately and must register with the Inquisition.',
+('Psychic Awakening',
+ 'Your connection to the Warp is violently wrenched open. You gain the Psyker Talent (page 114) and one random Minor Psychic Power (page 160). Whenever you roll on the Perils of the Warp table (page 165) you gain 1 additional Corruption.',
  'malignancy', '96–00');

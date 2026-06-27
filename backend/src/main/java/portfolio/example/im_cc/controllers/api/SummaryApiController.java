@@ -19,6 +19,7 @@ public class SummaryApiController {
     @Autowired private SummaryServiceImpl summaryService;
     @Autowired private ArmourRepository armourRepository;
     @Autowired private TalentRepository talentRepository;
+    @Autowired private TalentAdvancementRepository talentAdvancementRepository;
     @Autowired private InventoryRepository inventoryRepository;
     @Autowired private MeleeWeaponRepository meleeWeaponRepository;
     @Autowired private RangedWeaponRepository rangedWeaponRepository;
@@ -55,11 +56,40 @@ public class SummaryApiController {
         response.setAllTalentNames(allTalentNames);
 
         Map<String, String> talentDescMap = new HashMap<>();
+        Map<String, Map<Integer, String>> talentAdvEffectsMap = new LinkedHashMap<>();
+        Map<String, Integer> talentMaxAdvancesMap = new HashMap<>();
+        Map<String, List<Map<String, String>>> talentOptionsMap = new HashMap<>();
         talentRepository.findAll().forEach(t -> {
-            if (t.getName() != null)
-                talentDescMap.put(t.getName(), t.getDescription() != null ? t.getDescription() : "");
+            if (t.getName() == null) return;
+            talentDescMap.put(t.getName(), t.getDescription() != null ? t.getDescription() : "");
+            if (t.getMaxAdvances() != null && t.getMaxAdvances() > 1)
+                talentMaxAdvancesMap.put(t.getName(), t.getMaxAdvances());
+            List<portfolio.example.im_cc.models.TalentAdvancement> advancements =
+                    talentAdvancementRepository.findByTalentIdOrderByAdvanceNumberAsc(t.getId());
+            if (!advancements.isEmpty()) {
+                Map<Integer, String> effectMap = new LinkedHashMap<>();
+                advancements.stream()
+                        .filter(a -> !a.isChoice() && a.getAdvanceNumber() != null)
+                        .forEach(a -> effectMap.put(a.getAdvanceNumber(), a.getEffect() != null ? a.getEffect() : ""));
+                if (!effectMap.isEmpty()) talentAdvEffectsMap.put(t.getName(), effectMap);
+            }
+            List<portfolio.example.im_cc.models.TalentAdvancement> options =
+                    talentAdvancementRepository.findByTalentIdAndChoiceTrue(t.getId());
+            if (!options.isEmpty()) {
+                List<Map<String, String>> optList = new java.util.ArrayList<>();
+                options.forEach(o -> {
+                    Map<String, String> m = new LinkedHashMap<>();
+                    m.put("name", o.getName() != null ? o.getName() : "");
+                    m.put("effect", o.getEffect() != null ? o.getEffect() : "");
+                    optList.add(m);
+                });
+                talentOptionsMap.put(t.getName(), optList);
+            }
         });
         response.setTalentDescMap(talentDescMap);
+        response.setTalentAdvEffectsMap(talentAdvEffectsMap);
+        response.setTalentMaxAdvancesMap(talentMaxAdvancesMap);
+        response.setTalentOptionsMap(talentOptionsMap);
 
         // Inventory names
         List<String> allInventoryNames = inventoryRepository
@@ -100,11 +130,15 @@ public class SummaryApiController {
         response.setAllMutationNames(allMutationNames);
 
         Map<String, String> mutationDescMap = new HashMap<>();
+        Map<Long, String> mutationIdToNameMap = new HashMap<>();
         mutationRepository.findAll().forEach(m -> {
-            if (m.getName() != null)
+            if (m.getName() != null) {
                 mutationDescMap.put(m.getName(), m.getDescription() != null ? m.getDescription() : "");
+                mutationIdToNameMap.put(m.getId(), m.getName());
+            }
         });
         response.setMutationDescMap(mutationDescMap);
+        response.setMutationIdToNameMap(mutationIdToNameMap);
 
         // Augmetics
         List<InventoryCategory> augmeticCats = List.of(

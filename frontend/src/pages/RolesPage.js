@@ -167,31 +167,62 @@ export default function RolesPage() {
                             borderBottom: '1px solid var(--border)'
                         }}>Choose Role
                         </div>
-                        {roles.map(r => (
-                            <div key={r.id} onClick={() => selectRole(r)} style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '14px',
-                                padding: '14px 24px',
-                                cursor: 'pointer',
-                                borderLeft: `3px solid ${selected.id === r.id ? 'var(--red)' : 'transparent'}`,
-                                background: selected.id === r.id ? 'rgba(var(--accent-rgb),0.07)' : 'transparent',
-                                transition: '0.15s'
-                            }}>
-                                <div style={{
-                                    width: '9px',
-                                    height: '9px',
-                                    borderRadius: '50%',
-                                    background: selected.id === r.id ? 'var(--red)' : 'var(--border-strong)',
-                                    flexShrink: 0
-                                }}/>
-                                <div style={{
-                                    fontFamily: "'Barlow', sans-serif",
-                                    fontSize: '16px',
-                                    color: selected.id === r.id ? 'var(--red)' : 'var(--ink)'
-                                }}>{r.name}</div>
-                            </div>
-                        ))}
+                        {(() => {
+                            const imRoles = roles.filter(r => !r.sourceBook || r.sourceBook === 'IM');
+                            const inRoles = roles.filter(r => r.sourceBook === 'IN');
+                            const amRoles = roles.filter(r => r.sourceBook === 'AM');
+                            const RoleItem = (r) => (
+                                <div key={r.id} onClick={() => selectRole(r)} style={{
+                                    display: 'flex', alignItems: 'center', gap: '14px',
+                                    padding: '14px 24px', cursor: 'pointer',
+                                    borderLeft: `3px solid ${selected.id === r.id ? 'var(--red)' : 'transparent'}`,
+                                    background: selected.id === r.id ? 'rgba(var(--accent-rgb),0.07)' : 'transparent',
+                                    transition: '0.15s'
+                                }}>
+                                    <div style={{
+                                        width: '9px', height: '9px', borderRadius: '50%', flexShrink: 0,
+                                        background: selected.id === r.id ? 'var(--red)' : 'var(--border-strong)'
+                                    }}/>
+                                    <div style={{
+                                        fontFamily: "'Barlow', sans-serif", fontSize: '17px',
+                                        color: selected.id === r.id ? 'var(--red)' : 'var(--ink)'
+                                    }}>{r.name}</div>
+                                </div>
+                            );
+                            return <>
+                                {imRoles.length > 0 && <>
+                                    <div style={{
+                                        fontFamily:"'Barlow',sans-serif", fontSize:'11px',
+                                        textTransform:'uppercase', letterSpacing:'3px',
+                                        color:'var(--muted)', padding:'14px 24px 6px',
+                                        borderTop:'1px solid var(--border)', marginTop:'4px'
+                                    }}>Imperium Maledictum</div>
+                                    {imRoles.map(RoleItem)}
+                                </>}
+                                {inRoles.length > 0 && <>
+                                    <div style={{
+                                        fontFamily:"'Barlow',sans-serif", fontSize:'11px',
+                                        textTransform:'uppercase', letterSpacing:'3px',
+                                        color:'#a07840', padding:'14px 24px 6px',
+                                        borderTop:'1px solid var(--border)',
+                                        borderBottom:'1px solid rgba(160,120,64,0.25)',
+                                        background:'rgba(160,120,64,0.04)', marginTop:'4px'
+                                    }}>Inquisition Supplement</div>
+                                    {inRoles.map(RoleItem)}
+                                </>}
+                                {amRoles.length > 0 && <>
+                                    <div style={{
+                                        fontFamily:"'Barlow',sans-serif", fontSize:'11px',
+                                        textTransform:'uppercase', letterSpacing:'3px',
+                                        color:'#8b3a3a', padding:'14px 24px 6px',
+                                        borderTop:'1px solid var(--border)',
+                                        borderBottom:'1px solid rgba(139,58,58,0.25)',
+                                        background:'rgba(139,58,58,0.04)', marginTop:'4px'
+                                    }}>Adeptus Mechanicus Supplement</div>
+                                    {amRoles.map(RoleItem)}
+                                </>}
+                            </>;
+                        })()}
                     </div>
                 </nav>
 
@@ -209,6 +240,25 @@ export default function RolesPage() {
                         width: '100%',
                         maxWidth: '780px'
                     }}>
+                        {selected.sourceBook === 'IN' && (
+                            <div style={{
+                                fontFamily:"'Barlow', sans-serif", fontSize:'11px',
+                                letterSpacing:'3px', textTransform:'uppercase',
+                                color:'#a07840', background:'rgba(160,120,64,0.12)',
+                                border:'1px solid rgba(160,120,64,0.4)',
+                                padding:'3px 10px', display:'inline-block'
+                            }}>Inquisition Supplement</div>
+                        )}
+                        {selected.sourceBook === 'AM' && (
+                            <div style={{
+                                fontFamily:"'Barlow', sans-serif", fontSize:'11px',
+                                letterSpacing:'3px', textTransform:'uppercase',
+                                color:'#8b3a3a', background:'rgba(139,58,58,0.12)',
+                                border:'1px solid rgba(139,58,58,0.4)',
+                                padding:'3px 10px', display:'inline-block'
+                            }}>Adeptus Mechanicus Supplement</div>
+                        )}
+
                         <div style={{
                             fontFamily: "'Barlow', sans-serif",
                             fontSize: '32px',

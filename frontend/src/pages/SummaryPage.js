@@ -6,6 +6,46 @@ import {useAuth} from '../context/AuthContext';
 import Topbar from '../components/Topbar';
 import ProgressBar from '../components/ProgressBar';
 
+const RANDOM_TALENT_TABLE = [
+    [1,  10, 'ACUTE SENSE'],
+    [11, 13, 'ADRENALINE ACCELERATION'],
+    [14, 15, 'AMBIDEXTROUS'],
+    [16, 17, 'ARTISTIC'],
+    [18, 19, 'GOTHIC GIBBERISH'],
+    [20, 21, 'HOLDOUT EXPERT'],
+    [22, 23, 'CONTORTIONIST'],
+    [24, 25, 'DISTRACTING'],
+    [26, 27, 'DISTURBING VOICE'],
+    [28, 29, 'EIDETIC MEMORY'],
+    [30, 31, 'FAMILIAR TERRAIN'],
+    [32, 35, 'FATED'],
+    [36, 42, 'FLAGELLANT'],
+    [43, 44, 'FORBIDDEN KNOWLEDGE'],
+    [45, 48, 'FRENZY'],
+    [49, 54, 'HATRED'],
+    [55, 60, 'LICKSPITTLE'],
+    [61, 64, 'INHERITOR'],
+    [65, 66, 'SECRET IDENTITY'],
+    [67, 75, 'TENACIOUS'],
+    [76, 88, 'UNREMARKABLE'],
+    [89, 92, 'DEVOTED SERVANT'],
+    [93, 94, 'VOID LEGS'],
+    [95, 98, 'WELL-PREPARED'],
+    [99, 99, '__ROLL_TWICE__'],
+    [100, 100, '__PSYKER_OR_BLANK__'], // 00 = 100
+];
+
+function rollRandomTalent() {
+    let talent, display;
+    do {
+        const r = Math.floor(Math.random() * 100) + 1; // 1–100, where 100 = "00"
+        display = r === 100 ? '00' : String(r).padStart(2, '0');
+        const entry = RANDOM_TALENT_TABLE.find(([min, max]) => r >= min && r <= max);
+        talent = entry ? entry[2] : null;
+    } while (talent === '__ROLL_TWICE__');
+    return { display, talent };
+}
+
 const ARMOUR_LOC_MAP = {
     HEAD: ['Head'],
     BODY: ['Body'],
@@ -34,6 +74,8 @@ export default function SummaryPage() {
     const [skillAdv, setSkillAdv] = useState({});
     const [specAdv, setSpecAdv] = useState({});
     const [talents, setTalents] = useState([]);
+    const [choicePicker, setChoicePicker] = useState(null);
+    const [hypnoModal, setHypnoModal] = useState(null); // {slot1, slot2} — each {display, talent} or null
     const [mutations, setMutations] = useState([]);
     const [augmetics, setAugmetics] = useState([]);
     const [equipment, setEquipment] = useState([]);
@@ -55,6 +97,7 @@ export default function SummaryPage() {
     const [toastPos, setToastPos] = useState(null);
     const toastRef = useRef(null);
     const toastDragRef = useRef(false);
+    const initializedRef = useRef(false);
     const [rolling, setRolling] = useState(false);
     const [rollModal, setRollModal] = useState(null);
     const [rollMode, setRollMode] = useState('normal');
@@ -66,6 +109,8 @@ export default function SummaryPage() {
     const rollModalRef = useRef(null);
     const rollDragRef = useRef(null);
     const [corruption, setCorruption] = useState(0);
+    const [xpTotal, setXpTotal] = useState(0);
+    const [xpSpent, setXpSpent] = useState(0);
     const [handedness, setHandedness] = useState('right');
     const [protection, setProtection] = useState(
         PROTECT_LOCS.reduce((a, l) => ({...a, [l]: {ap: 0, special: '', wt: ''}}), {})
@@ -115,6 +160,8 @@ export default function SummaryPage() {
         traits: ''
     })));
 
+    const summaryStorageKey = `im_cc_summary_${ccm.originId ?? 'x'}_${ccm.factionId ?? 'x'}_${ccm.roleId ?? 'x'}`;
+
     useEffect(() => {
         setLoading(true);
         Promise.all([buildSummary(ccm), getPsychicDisciplines()])
@@ -153,8 +200,24 @@ export default function SummaryPage() {
         });
         setSpecAdv(spa);
 
-        setTalents((sheet.talents || []).map(t => ({name: t, desc: data.talentDescMap?.[t] || ''})));
+        setTalents((sheet.talents || []).map(t => ({
+            name: t,
+            desc: data.talentDescMap?.[t] || '',
+            advances: sheet.talentAdvances?.[t] || 1,
+            effects: data.talentAdvEffectsMap?.[t] || null,
+            choices: [],
+        })));
         setAugmetics((sheet.augmetics || []).map(a => ({name: a, notes: ''})));
+
+        // Pre-populate subtle mutations for MUTANT origin
+        const subtleMuts = [];
+        const idMap = data.mutationIdToNameMap || {};
+        [ccm.subtleMutationPositiveId, ccm.subtleMutationNegativeId].forEach(id => {
+            if (!id) return;
+            const name = idMap[id];
+            if (name) subtleMuts.push({name, desc: data.mutationDescMap?.[name] || ''});
+        });
+        setMutations(subtleMuts);
 
         const eqMap = {};
         (sheet.equipment || []).forEach(name => {
@@ -235,9 +298,78 @@ export default function SummaryPage() {
             if (sheet.factionName) n[0] = {...n[0], faction: sheet.factionName, infl: n[0].infl || '1'};
             return n.map(r => r.faction?.trim() && !r.infl ? {...r, infl: '1'} : r);
         });
+
+        try {
+            const stored = localStorage.getItem(summaryStorageKey);
+            if (stored) {
+                const e = JSON.parse(stored);
+                if (e.charName !== undefined) setCharName(e.charName);
+                if (e.charStart) setCharStart(e.charStart);
+                if (e.charAdv) setCharAdv(e.charAdv);
+                if (e.skillAdv) setSkillAdv(e.skillAdv);
+                if (e.specAdv) setSpecAdv(e.specAdv);
+                if (e.talents) setTalents(e.talents);
+                if (e.mutations) setMutations(e.mutations);
+                if (e.augmetics) setAugmetics(e.augmetics);
+                if (e.equipment) setEquipment(e.equipment);
+                if (e.weaponRows) setWeaponRows(e.weaponRows);
+                if (e.fateTotal !== undefined) setFateTotal(e.fateTotal);
+                if (e.fateCur !== undefined) setFateCur(e.fateCur);
+                if (e.startingMoney !== undefined) setStartingMoney(e.startingMoney);
+                if (e.solarsAmount !== undefined) setSolarsAmount(e.solarsAmount);
+                if (e.woundsCur !== undefined) setWoundsCur(e.woundsCur);
+                if (e.critWounds !== undefined) setCritWounds(e.critWounds);
+                if (e.superiority !== undefined) setSuperiority(e.superiority);
+                if (e.corruption !== undefined) setCorruption(e.corruption);
+                if (e.handedness) setHandedness(e.handedness);
+                if (e.protection) setProtection(e.protection);
+                if (e.critTable) setCritTable(e.critTable);
+                if (e.injuries) setInjuries(e.injuries);
+                if (e.activeConditions) setActiveConditions(e.activeConditions);
+                if (e.influence) setInfluence(e.influence);
+                if (e.age !== undefined) setAge(e.age);
+                if (e.height !== undefined) setHeight(e.height);
+                if (e.eyes !== undefined) setEyes(e.eyes);
+                if (e.hairColor !== undefined) setHairColor(e.hairColor);
+                if (e.hairStyle !== undefined) setHairStyle(e.hairStyle);
+                if (e.distFeatures !== undefined) setDistFeatures(e.distFeatures);
+                if (e.divination !== undefined) setDivination(e.divination);
+                if (e.shortGoal !== undefined) setShortGoal(e.shortGoal);
+                if (e.longGoal !== undefined) setLongGoal(e.longGoal);
+                if (e.biography !== undefined) setBiography(e.biography);
+                if (e.knownPowers) setKnownPowers(e.knownPowers);
+                if (e.extraSpecs) setExtraSpecs(e.extraSpecs);
+                if (e.xpTotal !== undefined) setXpTotal(e.xpTotal);
+                if (e.xpSpent !== undefined) setXpSpent(e.xpSpent);
+            }
+        } catch {}
+        initializedRef.current = true;
     }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Derived values ───────────────────────────────────────────
+    useEffect(() => {
+        if (!initializedRef.current) return;
+        try {
+            localStorage.setItem(summaryStorageKey, JSON.stringify({
+                charName, charStart, charAdv, skillAdv, specAdv,
+                talents, mutations, augmetics, equipment, weaponRows,
+                fateTotal, fateCur, startingMoney, solarsAmount,
+                woundsCur, critWounds, superiority, corruption, handedness,
+                protection, critTable, injuries, activeConditions, influence,
+                age, height, eyes, hairColor, hairStyle, distFeatures,
+                divination, shortGoal, longGoal, biography,
+                knownPowers, extraSpecs, xpTotal, xpSpent,
+            }));
+        } catch {}
+    }, [charName, charStart, charAdv, skillAdv, specAdv,
+        talents, mutations, augmetics, equipment, weaponRows,
+        fateTotal, fateCur, startingMoney, solarsAmount,
+        woundsCur, critWounds, superiority, corruption, handedness,
+        protection, critTable, injuries, activeConditions, influence,
+        age, height, eyes, hairColor, hairStyle, distFeatures,
+        divination, shortGoal, longGoal, biography,
+        knownPowers, extraSpecs, xpTotal, xpSpent]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const charCurrent = useMemo(() => {
         const m = {};
         Object.keys(charStart).forEach(k => {
@@ -367,16 +499,82 @@ export default function SummaryPage() {
     };
 
     // ── Talent / fate ────────────────────────────────────────────
+    const openChoicePicker = (talentName, currentChoices, isNew) => {
+        const allOptions = data?.talentOptionsMap?.[talentName] || [];
+        const available = allOptions.filter(o => !currentChoices.includes(o.name));
+        setChoicePicker({talentName, available, isNew, currentChoices});
+    };
+
+    const confirmChoice = (option) => {
+        const {talentName, isNew, currentChoices} = choicePicker;
+        setChoicePicker(null);
+        if (isNew) {
+            const desc = data?.talentDescMap?.[talentName] || '';
+            const effects = data?.talentAdvEffectsMap?.[talentName] || null;
+            setTalents(prev => [...prev, {name: talentName, desc, advances: 1, effects, choices: [option.name]}]);
+        } else {
+            setTalents(prev => prev.map(t =>
+                t.name.toLowerCase() === talentName.toLowerCase()
+                    ? {...t, advances: t.advances + 1, choices: [...(t.choices || []), option.name]}
+                    : t
+            ));
+        }
+        if (talentName.toLowerCase() === 'fated') setFateTotal(f => f + 1);
+    };
+
     const addTalent = (name) => {
         if (!name.trim()) return;
-        if (talents.find(t => t.name.toLowerCase() === name.toLowerCase())) return;
+        if (name.toUpperCase() === 'HYPNO-INDOCTRINATION') {
+            const alreadyHave = talents.some(t => t.name.toUpperCase() === 'HYPNO-INDOCTRINATION');
+            if (alreadyHave) return;
+            const desc = data?.talentDescMap?.['HYPNO-INDOCTRINATION'] || '';
+            setTalents(prev => [...prev, {name: 'HYPNO-INDOCTRINATION', desc, advances: 1, effects: null, choices: []}]);
+            setHypnoModal({slot1: null, slot2: null});
+            return;
+        }
+        const existing = talents.find(t => t.name.toLowerCase() === name.toLowerCase());
+        const maxAdvances = data?.talentMaxAdvancesMap?.[name] ?? 1;
+        const hasOptions = (data?.talentOptionsMap?.[name]?.length ?? 0) > 0;
+        // Talents with a fixed advance #1 give that on first purchase; picker only on re-purchase.
+        // Talents with no fixed first advance (ARTISTIC, FAMILIAR TERRAIN) show picker immediately.
+        const hasFixedFirst = !!(data?.talentAdvEffectsMap?.[name]?.[1]);
+
+        if (existing) {
+            if (existing.advances >= maxAdvances) return;
+            if (hasOptions) {
+                openChoicePicker(name, existing.choices || [], false);
+            } else {
+                setTalents(prev => prev.map(t =>
+                    t.name.toLowerCase() === name.toLowerCase()
+                        ? {...t, advances: t.advances + 1}
+                        : t
+                ));
+                if (name.toLowerCase() === 'fated') setFateTotal(f => f + 1);
+            }
+            return;
+        }
+        if (hasOptions && !hasFixedFirst) {
+            openChoicePicker(name, [], true);
+            return;
+        }
         const desc = data?.talentDescMap?.[name] || '';
-        setTalents(prev => [...prev, {name, desc}]);
+        const effects = data?.talentAdvEffectsMap?.[name] || null;
+        setTalents(prev => [...prev, {name, desc, advances: 1, effects, choices: []}]);
         if (name.toLowerCase() === 'fated') setFateTotal(f => f + 1);
     };
     const removeTalent = (name) => {
         setTalents(prev => prev.filter(t => t.name !== name));
         if (name.toLowerCase() === 'fated') setFateTotal(f => Math.max(1, f - 1));
+    };
+
+    const confirmHypno = () => {
+        const {slot1, slot2} = hypnoModal;
+        setHypnoModal(null);
+        [slot1, slot2].forEach(slot => {
+            if (slot?.talent && slot.talent !== '__PSYKER_OR_BLANK__') {
+                addTalent(slot.talent);
+            }
+        });
     };
 
     const addMutation = (name) => {
@@ -665,6 +863,24 @@ export default function SummaryPage() {
                                     <div className="char-id-value">{val || '—'}</div>
                                 </div>
                             ))}
+                            <div className="char-id-cell" style={{flex: '0 0 auto', minWidth: '160px', borderLeft: '1px solid var(--border)'}}>
+                                <div className="char-id-label">XP</div>
+                                <div className="fate-stack">
+                                    {[['Total', xpTotal, v => setXpTotal(Math.max(0, v))],
+                                      ['Spent', xpSpent, v => setXpSpent(Math.min(xpTotal, Math.max(0, v)))]].map(([lbl, val, set]) => (
+                                        <div key={lbl} className="fate-line">
+                                            <span className="fate-ll" style={{fontSize: '11px', minWidth: '48px'}}>{lbl}</span>
+                                            <input className="fate-num-input" type="number" min={0} value={val}
+                                                   onChange={e => set(parseInt(e.target.value) || 0)}
+                                                   style={{fontSize: '14px', width: '52px'}}/>
+                                        </div>
+                                    ))}
+                                    <div className="fate-line">
+                                        <span className="fate-ll" style={{fontSize: '11px', minWidth: '48px'}}>Current</span>
+                                        <span className="fate-threshold" style={{fontSize: '14px', width: '52px', textAlign: 'center', display: 'inline-block'}}>{xpTotal - xpSpent}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -980,12 +1196,25 @@ export default function SummaryPage() {
                             <div className="sec-hdr">Talents &amp; Traits</div>
                             <div className="sec-body">
                                 <div className="tag-cloud">
-                                    {talents.map(t => (
-                                        <span key={t.name} className="sm-tag removable-tag" data-desc={t.desc || ''}>
-                      <span>{t.name}</span>
-                      <button className="tag-remove-btn" onClick={() => removeTalent(t.name)}>×</button>
-                    </span>
-                                    ))}
+                                    {talents.map(t => {
+                                        let tipDesc = t.desc || '';
+                                        if (t.choices?.length > 0) {
+                                            const optLookup = {};
+                                            (data?.talentOptionsMap?.[t.name] || []).forEach(o => { optLookup[o.name] = o.effect; });
+                                            const choiceDescs = t.choices
+                                                .map(c => optLookup[c] ? `${c}: ${optLookup[c]}` : c)
+                                                .join('\n\n');
+                                            if (choiceDescs) tipDesc = tipDesc ? `${tipDesc}\n\n${choiceDescs}` : choiceDescs;
+                                        }
+                                        const choiceLabel = t.choices?.length > 0
+                                            ? `: ${t.choices.join(', ')}` : '';
+                                        return (
+                                            <span key={t.name} className="sm-tag removable-tag" data-desc={tipDesc}>
+                          <span>{t.name}{t.advances > 1 ? ` (×${t.advances})` : ''}{choiceLabel}</span>
+                          <button className="tag-remove-btn" onClick={() => removeTalent(t.name)}>×</button>
+                        </span>
+                                        );
+                                    })}
                                 </div>
                                 <AcAddRow placeholder="Search talents…" options={data.allTalentNames || []}
                                           onAdd={addTalent}/>
@@ -1714,6 +1943,99 @@ export default function SummaryPage() {
                 </div>
             )}
 
+            {/* ── Hypno-Indoctrination roll modal ── */}
+            {hypnoModal && (
+                <div className="talent-choice-overlay" onClick={() => setHypnoModal(null)}>
+                    <div className="talent-choice-modal hypno-modal" onClick={e => e.stopPropagation()}>
+                        <div className="talent-choice-title">HYPNO-INDOCTRINATION</div>
+                        <div className="talent-choice-subtitle">Roll twice on the Random Talents Table</div>
+                        <div className="hypno-slots">
+                            {[1, 2].map(n => {
+                                const slotKey = n === 1 ? 'slot1' : 'slot2';
+                                const slot = hypnoModal[slotKey];
+                                const isPsykerBlank = slot?.talent === '__PSYKER_OR_BLANK__';
+                                const alreadyHave = slot?.talent && !isPsykerBlank && !slot.overridden &&
+                                    talents.some(t => t.name.toLowerCase() === slot.talent.toLowerCase());
+                                const pending = isPsykerBlank || alreadyHave;
+                                return (
+                                    <div key={n} className={`hypno-slot${pending ? ' hypno-slot--pending' : ''}`}>
+                                        <div className="hypno-slot-header">
+                                            <span className="hypno-slot-label">Roll {n}</span>
+                                            {slot && <span className="hypno-roll-num">{slot.display}</span>}
+                                            {slot && !pending && <span className="hypno-talent-name">{slot.talent}</span>}
+                                            {!slot && <span className="hypno-empty">—</span>}
+                                            <button className="hypno-roll-btn" onClick={() => {
+                                                const result = rollRandomTalent();
+                                                setHypnoModal(prev => ({...prev, [slotKey]: result}));
+                                            }}>Roll d100</button>
+                                        </div>
+                                        {isPsykerBlank && (
+                                            <div className="hypno-sub">
+                                                <span className="hypno-sub-label">Choose:</span>
+                                                {['Psyker', 'Blank'].map(choice => (
+                                                    <button key={choice} className="hypno-pick-btn"
+                                                            onClick={() => setHypnoModal(prev => ({
+                                                                ...prev,
+                                                                [slotKey]: {...slot, talent: choice}
+                                                            }))}>
+                                                        {choice}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {alreadyHave && (
+                                            <div className="hypno-sub">
+                                                <span className="hypno-sub-label">{slot.talent} already owned — choose another:</span>
+                                                <HypnoTalentInput
+                                                    options={data?.allTalentNames || []}
+                                                    onSelect={val => setHypnoModal(prev => ({
+                                                        ...prev,
+                                                        [slotKey]: {...slot, talent: val, overridden: true}
+                                                    }))}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="hypno-footer">
+                            <button className="talent-choice-cancel" onClick={() => setHypnoModal(null)}>Cancel</button>
+                            <button className="hypno-confirm-btn"
+                                    disabled={
+                                        !hypnoModal.slot1 || !hypnoModal.slot2 ||
+                                        hypnoModal.slot1.talent === '__PSYKER_OR_BLANK__' ||
+                                        hypnoModal.slot2.talent === '__PSYKER_OR_BLANK__'
+                                    }
+                                    onClick={confirmHypno}>Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Talent choice picker ── */}
+            {choicePicker && (
+                <div className="talent-choice-overlay" onClick={() => setChoicePicker(null)}>
+                    <div className="talent-choice-modal" onClick={e => e.stopPropagation()}>
+                        <div className="talent-choice-title">{choicePicker.talentName}</div>
+                        <div className="talent-choice-subtitle">Choose one:</div>
+                        <div className="talent-choice-list">
+                            {choicePicker.available.length === 0
+                                ? <div className="talent-choice-empty">All options already chosen.</div>
+                                : choicePicker.available.map(opt => (
+                                    <div key={opt.name} className="talent-choice-option"
+                                         onClick={() => confirmChoice(opt)}>
+                                        <div className="talent-choice-opt-name">{opt.name}</div>
+                                        <div className="talent-choice-opt-effect">{opt.effect}</div>
+                                    </div>
+                                ))
+                            }
+                        </div>
+                        <button className="talent-choice-cancel" onClick={() => setChoicePicker(null)}>Cancel</button>
+                    </div>
+                </div>
+            )}
+
             {/* ── Roll toast ── */}
             {lastRoll && (
                 <div
@@ -1758,6 +2080,36 @@ function AutoTextarea({value, onChange, className, placeholder}) {
         <textarea ref={ref} value={value} onChange={onChange}
                   className={className} placeholder={placeholder}
                   rows={1} style={{resize: 'none', overflow: 'hidden', width: '100%', boxSizing: 'border-box'}}/>
+    );
+}
+
+/* ── Hypno-Indoctrination talent search ── */
+function HypnoTalentInput({options, onSelect}) {
+    const [text, setText] = useState('');
+    const [open, setOpen] = useState(false);
+    const filtered = options.filter(o => text.length > 0 && o.toLowerCase().includes(text.toLowerCase()));
+
+    return (
+        <div style={{position: 'relative', flex: 1, minWidth: 160}}>
+            <input
+                className="hypno-talent-input"
+                style={{width: '100%', boxSizing: 'border-box'}}
+                placeholder="Type talent name…"
+                value={text}
+                onChange={e => { setText(e.target.value); setOpen(true); }}
+                onBlur={() => setTimeout(() => setOpen(false), 150)}
+            />
+            {open && filtered.length > 0 && (
+                <div className="hypno-ac-drop">
+                    {filtered.slice(0, 15).map(o => (
+                        <div key={o} className="hypno-ac-item"
+                             onMouseDown={() => { onSelect(o); setText(o); setOpen(false); }}>
+                            {o}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
     );
 }
 

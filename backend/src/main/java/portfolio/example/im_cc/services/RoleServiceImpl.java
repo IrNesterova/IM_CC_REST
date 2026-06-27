@@ -45,10 +45,12 @@ public class RoleServiceImpl implements RoleService {
         });
 
         roleInventoryRepository.findByRoleIn(roles)
+                .stream().distinct()
                 .forEach(fi -> roleMap.get(fi.getRole().getId())
                         .getInventoryList().add(fi.getInventory()));
 
-        List<RoleChoiceGroup> allGroups = roleChoiceGroupRepository.findByRoleIn(roles);
+        List<RoleChoiceGroup> allGroups = roleChoiceGroupRepository.findByRoleIn(roles)
+                .stream().distinct().collect(Collectors.toList());
         allGroups.forEach(g ->{
             g.setTalentOptions(new ArrayList<>());
             g.setSkillOptions(new ArrayList<>());
