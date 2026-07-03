@@ -1,17 +1,12 @@
 package portfolio.example.im_cc.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import portfolio.example.im_cc.models.*;
-import portfolio.example.im_cc.repositories.CharacteristicsOriginRepository;
-import portfolio.example.im_cc.repositories.OriginRepository;
-import portfolio.example.im_cc.repositories.SkillRepository;
-import portfolio.example.im_cc.repositories.SkillSpecializationsRepository;
+import portfolio.example.im_cc.models.characterwizard.Skill;
+import portfolio.example.im_cc.repositories.characterwizard.SkillRepository;
+import portfolio.example.im_cc.repositories.characterwizard.SkillSpecializationsRepository;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class SkillServiceImpl implements SkillService{

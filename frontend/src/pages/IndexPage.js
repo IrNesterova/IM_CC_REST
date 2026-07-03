@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {useNavigate, Link} from 'react-router-dom';
 import {loadCharacter} from '../api/api';
+
 import {useCharacter} from '../context/CharacterContext';
 import {useAuth} from '../context/AuthContext';
 import Topbar from '../components/Topbar';
@@ -9,6 +10,9 @@ export default function IndexPage() {
     const [showLoad, setShowLoad] = useState(false);
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
+    const [showLoadPatron, setShowLoadPatron] = useState(false);
+    const [patronCode, setPatronCode] = useState('');
+    const [patronError, setPatronError] = useState('');
     const navigate = useNavigate();
     const {dispatch} = useCharacter();
     const {user, logout} = useAuth();
@@ -110,8 +114,62 @@ export default function IndexPage() {
                             border: '1px solid var(--red)', boxSizing: 'border-box', cursor: 'pointer',
                         }}>Create a character</button>
 
+                        <button onClick={() => navigate('/patron')} style={{
+                            display: 'block', width: '100%', padding: '16px 28px',
+                            fontFamily: "'Barlow', sans-serif", fontSize: '12px', fontWeight: 600,
+                            letterSpacing: '3px', textTransform: 'uppercase', textAlign: 'center',
+                            background: 'transparent', color: 'var(--ink)',
+                            border: '1px solid var(--border-strong)', boxSizing: 'border-box', cursor: 'pointer',
+                        }}>Create a patron</button>
+
                         <button
-                            onClick={() => setShowLoad(v => !v)}
+                            onClick={() => { setShowLoadPatron(v => !v); setShowLoad(false); }}
+                            style={{
+                                display: 'block', width: '100%', padding: '16px 28px',
+                                fontFamily: "'Barlow', sans-serif", fontSize: '12px', fontWeight: 600,
+                                letterSpacing: '3px', textTransform: 'uppercase', textAlign: 'center',
+                                background: 'transparent', color: 'var(--ink)',
+                                border: '1px solid var(--border-strong)', cursor: 'pointer',
+                            }}
+                        >
+                            {showLoadPatron ? 'Cancel' : 'Load patron'}
+                        </button>
+
+                        {showLoadPatron && (
+                            <div style={{display: 'flex', gap: '8px'}}>
+                                <input
+                                    type="text"
+                                    value={patronCode}
+                                    onChange={e => { setPatronCode(e.target.value.toUpperCase()); setPatronError(''); }}
+                                    onKeyDown={e => e.key === 'Enter' && navigate(`/patron?code=${patronCode.trim().toUpperCase()}`)}
+                                    placeholder="Enter 6-char code"
+                                    maxLength={6}
+                                    style={{
+                                        flex: 1, padding: '14px 16px',
+                                        background: 'transparent', border: '1px solid var(--border-strong)',
+                                        color: 'var(--ink)', fontFamily: "'Barlow', sans-serif",
+                                        fontSize: '15px', letterSpacing: '5px',
+                                        textTransform: 'uppercase', textAlign: 'center', outline: 'none',
+                                    }}
+                                />
+                                <button
+                                    onClick={() => {
+                                        const c = patronCode.trim().toUpperCase();
+                                        if (c.length !== 6) { setPatronError('Enter a 6-character code.'); return; }
+                                        navigate(`/patron?code=${c}`);
+                                    }}
+                                    style={{
+                                        padding: '14px 20px', fontFamily: "'Barlow', sans-serif", fontSize: '14px',
+                                        letterSpacing: '2px', background: 'var(--red)', color: 'var(--on-accent)',
+                                        border: '1px solid var(--red)', cursor: 'pointer',
+                                    }}>→
+                                </button>
+                            </div>
+                        )}
+                        {patronError && <div style={{color: 'var(--red)', fontSize: '14px', fontStyle: 'italic'}}>{patronError}</div>}
+
+                        <button
+                            onClick={() => { setShowLoad(v => !v); setShowLoadPatron(false); }}
                             style={{
                                 display: 'block',
                                 width: '100%',
@@ -188,6 +246,15 @@ export default function IndexPage() {
                                 border: '1px solid var(--border-strong)', cursor: 'pointer',
                             }}>
                                 My cabinet
+                            </button>
+                            <button onClick={() => navigate('/lobby')} style={{
+                                width: '100%', padding: '14px 28px',
+                                fontFamily: "'Barlow', sans-serif", fontSize: '12px', fontWeight: 600,
+                                letterSpacing: '3px', textTransform: 'uppercase',
+                                background: 'transparent', color: 'var(--ink)',
+                                border: '1px solid var(--border-strong)', cursor: 'pointer',
+                            }}>
+                                Lobby
                             </button>
                             <button onClick={logout} style={{
                                 width: '100%', padding: '12px 28px',

@@ -22,14 +22,17 @@ export default function OriginsPage() {
     const [negativeRoll, setNegativeRoll]         = useState(null);
     const [loading, setLoading]                   = useState(true);
     const navigate  = useNavigate();
-    const {ccm, dispatch} = useCharacter();
+    const {ccm, dispatch, allowedSourceBooks} = useCharacter();
 
     useEffect(() => {
         getOrigins().then(data => {
-            setOrigins(data);
-            if (data.length > 0) {
-                const saved = ccm.originId ? data.find(o => o.id === ccm.originId) : null;
-                setSelected(saved || data[0]);
+            const filtered = allowedSourceBooks
+                ? data.filter(o => allowedSourceBooks.includes(o.sourceBook))
+                : data;
+            setOrigins(filtered);
+            if (filtered.length > 0) {
+                const saved = ccm.originId ? filtered.find(o => o.id === ccm.originId) : null;
+                setSelected(saved || filtered[0]);
             }
         }).finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps

@@ -3,8 +3,12 @@ package portfolio.example.im_cc.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import portfolio.example.im_cc.models.*;
-import portfolio.example.im_cc.repositories.*;
+import portfolio.example.im_cc.models.characterwizard.Role;
+import portfolio.example.im_cc.models.characterwizard.RoleChoiceGroup;
+import portfolio.example.im_cc.models.characterwizard.Skill;
+import portfolio.example.im_cc.models.characterwizard.Specialization;
+import portfolio.example.im_cc.models.enums.ChoiceType;
+import portfolio.example.im_cc.repositories.characterwizard.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,7 +31,7 @@ public class RoleServiceImpl implements RoleService {
     @Autowired
     RoleSpecializationChoiceGroupRepository roleSpecializationChoiceGroupRepository;
     @Autowired
-    portfolio.example.im_cc.repositories.SkillSpecializationsRepository skillSpecializationsRepository;
+    SkillSpecializationsRepository skillSpecializationsRepository;
 
     @Override
     public List<Role> getAllRolesWithAdds() {

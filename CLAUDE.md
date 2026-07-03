@@ -1,3 +1,4 @@
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -88,7 +89,7 @@ Database schema is managed by Hibernate (`ddl-auto=update`). Game data is seeded
 
 ## Supplement System
 
-Game content spans four source books, tracked via the `SourceBook` enum: `IM` (core), `IN` (Inquisition), `AM` (Adeptus Mechanicus / Assembly of Means), `MR` (Malediction Rising).
+Game content spans four source books, tracked via the `SourceBook` enum: `IM` (core), `IN` (Inquisition), `AM` (Adeptus Mechanicus / Assembly of Means), `MR` (Macharian Requisition).
 
 Each supplement has its own SQL seed files and frontend UI sections. The nav sidebar on FactionsPage and RolesPage groups entries by source book with distinct accent colours:
 - **IM** — neutral (`var(--muted)`)

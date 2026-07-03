@@ -1,10 +1,13 @@
 package portfolio.example.im_cc.services;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import portfolio.example.im_cc.models.*;
-import portfolio.example.im_cc.repositories.*;
+import portfolio.example.im_cc.models.characterwizard.*;
+import portfolio.example.im_cc.models.enums.ChoiceType;
+import portfolio.example.im_cc.models.enums.InventoryCategory;
+import portfolio.example.im_cc.repositories.characterwizard.*;
 
 import java.util.*;
 
@@ -19,22 +22,27 @@ public class SummaryServiceImpl {
     @Autowired SkillSpecializationsRepository skillSpecializationsRepository;
     @Autowired FactionTalentRepository factionTalentRepository;
     @Autowired FactionInventoryRepository factionInventoryRepository;
-    @Autowired FactionChoiceGroupRepository factionChoiceGroupRepository;
+    @Autowired
+    FactionChoiceGroupRepository factionChoiceGroupRepository;
     @Autowired FactionTalentChoiceRepository factionTalentChoiceRepository;
     @Autowired FactionInventoryChoiceRepository factionInventoryChoiceRepository;
     @Autowired RoleInventoryRepository roleInventoryRepository;
     @Autowired RoleChoiceGroupRepository roleChoiceGroupRepository;
     @Autowired RoleTalentChoiceGroupRepository roleTalentChoiceGroupRepository;
     @Autowired RoleInventoryChoiceGroupRepository roleInventoryChoiceGroupRepository;
-    @Autowired portfolio.example.im_cc.repositories.EquipmentPackItemRepository equipmentPackItemRepository;
+    @Autowired
+    EquipmentPackItemRepository equipmentPackItemRepository;
     @Autowired OriginTalentRepository originTalentRepository;
     @Autowired OriginInventoryItemRepository originInventoryItemRepository;
     @Autowired InventoryRepository inventoryRepository;
     @Autowired FactionGradeRepository factionGradeRepository;
-    @Autowired FactionGradeInventoryRepository factionGradeInventoryRepository;
+    @Autowired
+    FactionGradeInventoryRepository factionGradeInventoryRepository;
     @Autowired FactionGradeTalentRepository factionGradeTalentRepository;
-    @Autowired FactionGradeChoiceGroupRepository factionGradeChoiceGroupRepository;
-    @Autowired FactionGradeInventoryChoiceRepository factionGradeInventoryChoiceRepository;
+    @Autowired
+    FactionGradeChoiceGroupRepository factionGradeChoiceGroupRepository;
+    @Autowired
+    FactionGradeInventoryChoiceRepository factionGradeInventoryChoiceRepository;
     @Autowired FactionGradeTalentChoiceRepository factionGradeTalentChoiceRepository;
 
     private static String resolveItemName(Inventory inv, Map<Long, Long> variantChoices) {
@@ -53,6 +61,7 @@ public class SummaryServiceImpl {
         return cat == InventoryCategory.AUGMETIC || cat == InventoryCategory.AUGMETIC_REPLACEMENTS;
     }
 
+    @Transactional
     public CharacterSheetDTO build(CharacterCreationModel ccm) {
         CharacterSheetDTO dto = new CharacterSheetDTO();
 

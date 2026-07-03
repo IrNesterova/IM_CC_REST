@@ -12,8 +12,10 @@ import RolesPage from './pages/RolesPage';
 import DetailsPage from './pages/DetailsPage';
 import SummaryPage from './pages/SummaryPage';
 import CabinetPage from './pages/CabinetPage';
+import RoomPage from './pages/RoomPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import PatronPage from './pages/PatronPage';
 
 export default function App() {
     return (
@@ -29,13 +31,19 @@ export default function App() {
                         <Route path="/roles" element={<RolesPage/>}/>
                         <Route path="/details" element={<DetailsPage/>}/>
                         <Route path="/summary" element={<SummaryPage/>}/>
+                        <Route path="/character/:code" element={<SummaryPage/>}/>
                         {/* новые маршруты кабинета */}
                         <Route path="/login" element={<LoginPage/>}/>
                         <Route path="/register" element={<RegisterPage/>}/>
                         <Route path="/cabinet" element={
                             <ProtectedRoute><CabinetPage/></ProtectedRoute>
                         }/>
+                        <Route path="/lobby" element={<Navigate to="/cabinet" state={{tab: 'rooms'}}/>}/>
+                        <Route path="/room/:roomId" element={
+                            <ProtectedRoute><RoomPage/></ProtectedRoute>
+                        }/>
 
+                        <Route path="/patron" element={<PatronPage/>}/>
                         <Route path="*" element={<Navigate to="/"/>}/>
                     </Routes>
                     <BugReport/>

@@ -6,9 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import portfolio.example.im_cc.models.AppUser;
-import portfolio.example.im_cc.models.CharacterSave;
+import portfolio.example.im_cc.models.characterwizard.CharacterSave;
 import portfolio.example.im_cc.repositories.AppUserRepository;
-import portfolio.example.im_cc.repositories.CharacterSaveRepository;
+import portfolio.example.im_cc.repositories.characterwizard.CharacterSaveRepository;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;

@@ -4,12 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import portfolio.example.im_cc.models.CharacterInjury;
-import portfolio.example.im_cc.models.CharacterSheetDTO;
-import portfolio.example.im_cc.models.Injury;
-import portfolio.example.im_cc.repositories.CharacterInjuryRepository;
-import portfolio.example.im_cc.repositories.CharacterSaveRepository;
-import portfolio.example.im_cc.repositories.InjuryRepository;
+import portfolio.example.im_cc.models.characterwizard.CharacterInjury;
+import portfolio.example.im_cc.models.characterwizard.CharacterSheetDTO;
+import portfolio.example.im_cc.models.characterwizard.Injury;
+import portfolio.example.im_cc.repositories.characterwizard.CharacterInjuryRepository;
+import portfolio.example.im_cc.repositories.characterwizard.CharacterSaveRepository;
+import portfolio.example.im_cc.repositories.characterwizard.InjuryRepository;
 
 import java.util.List;
 

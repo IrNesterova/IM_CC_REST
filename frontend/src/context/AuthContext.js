@@ -1,4 +1,4 @@
-import {createContext, useContext, useEffect, useState} from 'react';
+import {createContext, useContext, useEffect, useRef, useState} from 'react';
 import {getMe, login as apiLogin, logout as apiLogout} from '../api/api';
 
 const AuthContext = createContext(null);
@@ -13,6 +13,16 @@ export function AuthProvider({children}) {
         const params = new URLSearchParams(window.location.search);
         return params.get('auth') === 'discord';
     });
+    const refreshedRef = useRef(false);
+
+    // Silently refresh user data on mount so cached sessions pick up new fields (e.g. id).
+    useEffect(() => {
+        if (refreshedRef.current) return;
+        refreshedRef.current = true;
+        getMe()
+            .then(u => { setUser(u); localStorage.setItem(STORAGE_KEY, JSON.stringify(u)); })
+            .catch(() => {});
+    }, []);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);

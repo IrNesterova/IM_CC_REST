@@ -1,6 +1,6 @@
 package portfolio.example.im_cc.dto;
 
-import portfolio.example.im_cc.models.CharacterSheetDTO;
+import portfolio.example.im_cc.models.characterwizard.CharacterSheetDTO;
 
 import java.util.List;
 import java.util.Map;

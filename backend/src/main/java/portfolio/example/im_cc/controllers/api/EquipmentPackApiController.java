@@ -4,14 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import portfolio.example.im_cc.models.EquipmentPack;
-import portfolio.example.im_cc.models.EquipmentPackItem;
-import portfolio.example.im_cc.repositories.EquipmentPackItemRepository;
-import portfolio.example.im_cc.repositories.EquipmentPackRepository;
+import portfolio.example.im_cc.models.characterwizard.EquipmentPack;
+import portfolio.example.im_cc.models.characterwizard.EquipmentPackItem;
+import portfolio.example.im_cc.repositories.characterwizard.EquipmentPackItemRepository;
+import portfolio.example.im_cc.repositories.characterwizard.EquipmentPackRepository;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/equipment-packs")

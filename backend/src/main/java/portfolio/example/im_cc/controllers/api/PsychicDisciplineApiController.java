@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import portfolio.example.im_cc.models.PsychicDiscipline;
-import portfolio.example.im_cc.repositories.PsychicDisciplineRepository;
+import portfolio.example.im_cc.models.characterwizard.PsychicDiscipline;
+import portfolio.example.im_cc.repositories.characterwizard.PsychicDisciplineRepository;
 
 import java.util.List;
 

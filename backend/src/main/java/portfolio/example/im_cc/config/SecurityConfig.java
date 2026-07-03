@@ -53,6 +53,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/me/**").authenticated()
+                        .requestMatchers("/api/rooms/**").authenticated()
                         .anyRequest().permitAll()
                 );
         return http.build();
@@ -79,7 +80,7 @@ public class SecurityConfig {
 
         CorsConfiguration c = new CorsConfiguration();
         c.setAllowedOrigins(origins);
-        c.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        c.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         c.setAllowedHeaders(List.of("*"));
         c.setAllowCredentials(true);
 

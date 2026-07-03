@@ -1,4 +1,4 @@
-import {createContext, useContext, useEffect, useReducer} from 'react';
+import {createContext, useContext, useEffect, useReducer, useState} from 'react';
 
 const STORAGE_KEY = 'im_cc_ccm';
 
@@ -162,13 +162,17 @@ function loadFromStorage() {
 
 export function CharacterProvider({children}) {
     const [ccm, dispatch] = useReducer(reducer, undefined, loadFromStorage);
+    // Session-only restriction from the lobby room (not persisted to localStorage).
+    // null means no restriction (standalone character creation); an array of SourceBook
+    // strings means only those books are available.
+    const [allowedSourceBooks, setAllowedSourceBooks] = useState(null);
 
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(ccm));
     }, [ccm]);
 
     return (
-        <CharacterContext.Provider value={{ccm, dispatch}}>
+        <CharacterContext.Provider value={{ccm, dispatch, allowedSourceBooks, setAllowedSourceBooks}}>
             {children}
         </CharacterContext.Provider>
     );

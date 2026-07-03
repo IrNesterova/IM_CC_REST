@@ -2,11 +2,11 @@ package portfolio.example.im_cc.controllers.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import portfolio.example.im_cc.dto.SummaryResponseDTO;
-import portfolio.example.im_cc.models.*;
-import portfolio.example.im_cc.repositories.*;
+import portfolio.example.im_cc.models.characterwizard.*;
+import portfolio.example.im_cc.models.enums.InventoryCategory;
+import portfolio.example.im_cc.repositories.characterwizard.*;
 import portfolio.example.im_cc.services.SummaryServiceImpl;
 
 import java.util.*;
@@ -27,11 +27,42 @@ public class SummaryApiController {
     @Autowired private CombatActionRepository combatActionRepository;
     @Autowired private SkillSpecializationsRepository skillSpecializationsRepository;
 
-    @Transactional(readOnly = true)
     @PostMapping
     public SummaryResponseDTO buildSummary(@RequestBody CharacterCreationModel ccm) {
         SummaryResponseDTO response = new SummaryResponseDTO();
 
+        // Weapon queries run FIRST while the session cache is empty.
+        // This prevents Hibernate 6 polymorphic-cache contamination: later calls to
+        // inventoryRepository.findAll() (or polymorphic loads inside build()) can
+        // incorrectly map MeleeWeapon IDs as Augmetic. Running weapon queries first
+        // puts the correct types into the L1 cache, so subsequent polymorphic loads
+        // find the already-cached correct types and skip type-resolution.
+        Map<String, Map<String, String>> meleeWeaponMap = new HashMap<>();
+        meleeWeaponRepository.findAll().forEach(w -> {
+            Map<String, String> s = new LinkedHashMap<>();
+            s.put("class",   w.getSpecialization() != null ? w.getSpecialization().getName() : "");
+            s.put("damage",  w.getDamage() != null ? w.getDamage() : "");
+            s.put("special", w.getSpecial() != null ? w.getSpecial() : "");
+            s.put("wt",      w.getEncumbrance() != null ? String.valueOf(w.getEncumbrance()) : "");
+            meleeWeaponMap.put(w.getName(), s);
+        });
+        response.setMeleeWeaponMap(meleeWeaponMap);
+
+        Map<String, Map<String, String>> rangedWeaponMap = new HashMap<>();
+        rangedWeaponRepository.findAll().forEach(w -> {
+            Map<String, String> s = new LinkedHashMap<>();
+            s.put("class",   w.getSpecialization() != null ? w.getSpecialization().getName() : "");
+            s.put("damage",  w.getDamage() != null ? String.valueOf(w.getDamage()) : "");
+            s.put("range",   w.getRange() != null ? w.getRange().name() : "");
+            s.put("clip",    w.getMagSize() != null ? String.valueOf(w.getMagSize()) : "");
+            s.put("special", w.getSpecial() != null ? w.getSpecial() : "");
+            s.put("wt",      w.getEncumbrance() != null ? String.valueOf(w.getEncumbrance()) : "");
+            rangedWeaponMap.put(w.getName(), s);
+        });
+        response.setRangedWeaponMap(rangedWeaponMap);
+
+        // Character sheet — may trigger polymorphic Inventory loads internally.
+        // Weapon IDs are already correctly typed in the L1 cache at this point.
         response.setSheet(summaryService.build(ccm));
 
         // Armour stats
@@ -64,7 +95,7 @@ public class SummaryApiController {
             talentDescMap.put(t.getName(), t.getDescription() != null ? t.getDescription() : "");
             if (t.getMaxAdvances() != null && t.getMaxAdvances() > 1)
                 talentMaxAdvancesMap.put(t.getName(), t.getMaxAdvances());
-            List<portfolio.example.im_cc.models.TalentAdvancement> advancements =
+            List<TalentAdvancement> advancements =
                     talentAdvancementRepository.findByTalentIdOrderByAdvanceNumberAsc(t.getId());
             if (!advancements.isEmpty()) {
                 Map<Integer, String> effectMap = new LinkedHashMap<>();
@@ -73,7 +104,7 @@ public class SummaryApiController {
                         .forEach(a -> effectMap.put(a.getAdvanceNumber(), a.getEffect() != null ? a.getEffect() : ""));
                 if (!effectMap.isEmpty()) talentAdvEffectsMap.put(t.getName(), effectMap);
             }
-            List<portfolio.example.im_cc.models.TalentAdvancement> options =
+            List<TalentAdvancement> options =
                     talentAdvancementRepository.findByTalentIdAndChoiceTrue(t.getId());
             if (!options.isEmpty()) {
                 List<Map<String, String>> optList = new java.util.ArrayList<>();
@@ -96,32 +127,6 @@ public class SummaryApiController {
                 .findAll(Sort.by(Sort.Direction.ASC, "name"))
                 .stream().map(Inventory::getName).collect(Collectors.toList());
         response.setAllInventoryNames(allInventoryNames);
-
-        // Melee weapons
-        Map<String, Map<String, String>> meleeWeaponMap = new HashMap<>();
-        meleeWeaponRepository.findAllWithSpec().forEach(w -> {
-            Map<String, String> s = new LinkedHashMap<>();
-            s.put("class",   w.getSpecialization() != null ? w.getSpecialization().getName() : "");
-            s.put("damage",  w.getDamage() != null ? w.getDamage() : "");
-            s.put("special", w.getSpecial() != null ? w.getSpecial() : "");
-            s.put("wt",      w.getEncumbrance() != null ? String.valueOf(w.getEncumbrance()) : "");
-            meleeWeaponMap.put(w.getName(), s);
-        });
-        response.setMeleeWeaponMap(meleeWeaponMap);
-
-        // Ranged weapons
-        Map<String, Map<String, String>> rangedWeaponMap = new HashMap<>();
-        rangedWeaponRepository.findAllWithSpec().forEach(w -> {
-            Map<String, String> s = new LinkedHashMap<>();
-            s.put("class",   w.getSpecialization() != null ? w.getSpecialization().getName() : "");
-            s.put("damage",  w.getDamage() != null ? String.valueOf(w.getDamage()) : "");
-            s.put("range",   w.getRange() != null ? w.getRange().name() : "");
-            s.put("clip",    w.getMagSize() != null ? String.valueOf(w.getMagSize()) : "");
-            s.put("special", w.getSpecial() != null ? w.getSpecial() : "");
-            s.put("wt",      w.getEncumbrance() != null ? String.valueOf(w.getEncumbrance()) : "");
-            rangedWeaponMap.put(w.getName(), s);
-        });
-        response.setRangedWeaponMap(rangedWeaponMap);
 
         // Mutations
         List<String> allMutationNames = mutationRepository

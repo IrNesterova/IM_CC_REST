@@ -3,8 +3,8 @@ package portfolio.example.im_cc.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import portfolio.example.im_cc.models.Characteristics;
-import portfolio.example.im_cc.repositories.CharacteristicsRepository;
+import portfolio.example.im_cc.models.characterwizard.Characteristics;
+import portfolio.example.im_cc.repositories.characterwizard.CharacteristicsRepository;
 
 import java.util.List;
 import java.util.Optional;

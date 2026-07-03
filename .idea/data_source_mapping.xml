@@ -32,6 +32,19 @@
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/merge_inventory_128_into_180.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/merge_inventory_133_into_2.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/mutations_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_administratum.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_astra_militarum.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_astra_telepathica.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_boon_duty_migration.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_flaw_to_liability_migration.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_imperial_fleet.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_infractionist.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_inquisition.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_mechanicus.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_ministorum.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_rogue_trader.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
+    <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/patron_source_book_migration.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/psychic_powers_data.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/ranged_weapon.sql" value="eeaeb3f6-ed4b-4b04-a78c-58202e9a3c1c" />
     <file url="file://$PROJECT_DIR$/backend/src/main/resources/sql/roles_data.sql" value="98da04c6-5e13-4fee-9f1e-b5fa7d2e76f1" />

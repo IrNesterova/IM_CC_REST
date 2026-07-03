@@ -16,20 +16,23 @@ export default function RolesPage() {
     const [expandedTalents, setExpandedTalents] = useState({});
     const [itemVariantChoices, setItemVariantChoices] = useState({});
     const navigate = useNavigate();
-    const {ccm, dispatch} = useCharacter();
+    const {ccm, dispatch, allowedSourceBooks} = useCharacter();
 
     useEffect(() => {
         getRoles().then(data => {
-            setRoles(data);
-            if (data.length > 0) {
-                const saved = ccm.roleId ? data.find(r => r.id === ccm.roleId) : null;
+            const filtered = allowedSourceBooks
+                ? data.filter(r => allowedSourceBooks.includes(r.sourceBook))
+                : data;
+            setRoles(filtered);
+            if (filtered.length > 0) {
+                const saved = ccm.roleId ? filtered.find(r => r.id === ccm.roleId) : null;
                 if (saved) {
                     setSelected(saved);
                     setRoleChoices(ccm.roleChoices || {});
                     setRoleSkillAdv(ccm.roleSkillAdvances || {});
                     setRoleSpecAdv(ccm.roleSpecAdvances || {});
                 } else {
-                    selectRole(data[0]);
+                    selectRole(filtered[0]);
                 }
             }
         }).finally(() => setLoading(false));

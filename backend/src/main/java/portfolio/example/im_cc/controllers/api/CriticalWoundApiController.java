@@ -3,9 +3,9 @@ package portfolio.example.im_cc.controllers.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import portfolio.example.im_cc.models.BodyLocation;
-import portfolio.example.im_cc.models.CriticalWound;
-import portfolio.example.im_cc.repositories.CriticalWoundRepository;
+import portfolio.example.im_cc.models.enums.BodyLocation;
+import portfolio.example.im_cc.models.characterwizard.CriticalWound;
+import portfolio.example.im_cc.repositories.characterwizard.CriticalWoundRepository;
 
 import java.util.List;
 

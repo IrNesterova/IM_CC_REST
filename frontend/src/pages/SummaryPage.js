@@ -1,6 +1,6 @@
 import {useEffect, useState, useMemo, useCallback, useRef} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {buildSummary, saveCharacter, loadCharacter, getPsychicDisciplines, getInjuries, lookupCriticalWound, getConditions} from '../api/api';
+import {useNavigate, useParams, useLocation} from 'react-router-dom';
+import {buildSummary, saveCharacter, loadCharacter, getPsychicDisciplines, getInjuries, lookupCriticalWound, getConditions, getPatronPreview} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
 import {useAuth} from '../context/AuthContext';
 import Topbar from '../components/Topbar';
@@ -60,6 +60,19 @@ export default function SummaryPage() {
     const {ccm, dispatch} = useCharacter();
     const {user} = useAuth();
     const navigate = useNavigate();
+    const {state: navState} = useLocation();
+    const {code: viewCode} = useParams();
+
+    // Violations passed from RoomPage when navigating to a character from the roster.
+    // null allowedSourceBooks means no room context → no highlighting.
+    const roomAllowed = navState?.allowedSourceBooks ?? null;
+    const [patronPreview, setPatronPreview] = useState(null);
+
+    useEffect(() => {
+        const code = navState?.patronCode;
+        if (code) getPatronPreview(code).then(setPatronPreview).catch(() => {});
+    }, [navState?.patronCode]);
+    const isViolated = (sb) => roomAllowed && sb && !roomAllowed.includes(sb); // present on /character/:code route → read-only view mode
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saveCode, setSaveCode] = useState(null);
@@ -92,7 +105,8 @@ export default function SummaryPage() {
     const [openSpecSkill, setOpenSpecSkill] = useState(null);
     const [customSpecText, setCustomSpecText] = useState('');
     const [webhookUrl, setWebhookUrl] = useState(() => localStorage.getItem('im_discord_webhook') || '');
-    const effectiveWebhookUrl = user?.webhookUrl || webhookUrl;
+    // Room webhook (from navigation state) takes priority over any personal webhook setting.
+    const effectiveWebhookUrl = navState?.webhookUrl || user?.webhookUrl || webhookUrl;
     const [lastRoll, setLastRoll] = useState(null);
     const [toastPos, setToastPos] = useState(null);
     const toastRef = useRef(null);
@@ -164,7 +178,11 @@ export default function SummaryPage() {
 
     useEffect(() => {
         setLoading(true);
-        Promise.all([buildSummary(ccm), getPsychicDisciplines()])
+        const ccmPromise = viewCode
+            ? loadCharacter(viewCode).then(result => result?.ccm)
+            : Promise.resolve(ccm);
+        ccmPromise
+            .then(resolvedCcm => Promise.all([buildSummary(resolvedCcm), getPsychicDisciplines()]))
             .then(([d, disc]) => {
                 setData(d);
                 setDisciplines(disc);
@@ -752,8 +770,9 @@ export default function SummaryPage() {
         const isDouble = value === 100 || (value < 100 && Math.floor(value / 10) === value % 10);
         const crit = rollModal.isWeapon && isDouble && success;
         const fumble = rollModal.isWeapon && isDouble && !success;
-        const rawDoS = success ? Math.floor((effectiveTarget - value) / 10) : Math.floor((value - effectiveTarget - 1) / 10);
-        const degrees = success ? rawDoS + rollExtraDoS : rawDoS;
+        // SL = tens digit of skill − tens digit of roll (per IM rules)
+        const sl = Math.floor(effectiveTarget / 10) - Math.floor(value / 10);
+        const degrees = Math.abs(sl) + (success ? rollExtraDoS : 0);
         const result = {value, orig, rev, reversed, success, crit, fumble, degrees, effectiveTarget};
         setRollResult(result);
         setLastRoll({value, label: rollModal.label, target: effectiveTarget, success, degrees, crit, fumble});
@@ -766,8 +785,8 @@ export default function SummaryPage() {
                 : (rollMode !== 'normal' && orig !== rev) ? ` *(${orig} / ${rev})*` : '';
             const outcome = crit ? `Roll: **${value}**${revNote} 🌟 Critical Success!`
                 : fumble ? `Roll: **${value}**${revNote} 💀 Fumble!`
-                    : success ? `Roll: **${value}**${revNote} ✅ Success (DoS: ${degrees})`
-                        : `Roll: **${value}**${revNote} ❌ Failure (DoF: ${degrees})`;
+                    : success ? `Roll: **${value}**${revNote} ✅ Success (SL: +${degrees})`
+                        : `Roll: **${value}**${revNote} ❌ Failure (SL: −${degrees})`;
             const color = crit ? 0xf1c40f : fumble ? 0x8e44ad : success ? 0x27ae60 : 0xe74c3c;
             const diffStr2 = diffLabel ? ` — ${diffLabel}` : '';
             const modStr2 = rollModifier !== 0 ? ` mod ${rollModifier > 0 ? '+' : ''}${rollModifier}` : '';
@@ -776,9 +795,9 @@ export default function SummaryPage() {
                 title: `🎲 ${rollModal.label}${diffStr2}${modeStr2}`,
                 description: `Target: **${effectiveTarget}**${modStr2}\n${outcome}`,
                 color,
-                footer: {text: 'Imperium Maledictum'},
+                footer: {text: user?.displayName ? `${user.displayName} · Imperium Maledictum` : 'Imperium Maledictum'},
             };
-            if (user?.displayName) embed.author = {name: user.displayName};
+            if (charName) embed.author = {name: charName};
             const webhookBody = {embeds: [embed]};
             if (charName) webhookBody.username = charName;
 
@@ -810,7 +829,7 @@ export default function SummaryPage() {
 
     if (loading) return (
         <>
-            <ProgressBar/><Topbar/>
+            {!viewCode && <ProgressBar/>}<Topbar/>
             <div style={{
                 display: 'flex',
                 justifyContent: 'center',
@@ -834,7 +853,7 @@ export default function SummaryPage() {
 
     return (
         <>
-            <ProgressBar/><Topbar/>
+            {!viewCode && <ProgressBar/>}<Topbar/>
             <div style={{flex: 1, background: 'var(--bg)'}}>
                 <div className="sheet-wrapper">
 
@@ -850,19 +869,48 @@ export default function SummaryPage() {
                                        }} placeholder="Character Name"/>
                             </div>
                             <div className="char-header-actions">
-                                <button className="action-btn" onClick={handleSave}
-                                        disabled={saving}>{saving ? 'Saving…' : saveCode ? 'Save Again' : 'Save'}</button>
+                                {viewCode ? (
+                                    <button className="action-btn secondary" onClick={() => navigate(-1)}>← Back</button>
+                                ) : (
+                                    <button className="action-btn" onClick={handleSave}
+                                            disabled={saving}>{saving ? 'Saving…' : saveCode ? 'Save Again' : 'Save'}</button>
+                                )}
                                 <button className="action-btn secondary" onClick={() => window.print()}>Print / PDF
                                 </button>
                             </div>
                         </div>
                         <div className="char-identity-strip">
-                            {[['Origin', sheet.originName], ['Faction', sheet.factionName], ['Role', sheet.roleName]].map(([label, val]) => (
-                                <div key={label} className="char-id-cell">
-                                    <div className="char-id-label">{label}</div>
-                                    <div className="char-id-value">{val || '—'}</div>
+                            {[
+                                ['Origin',  sheet.originName,  navState?.originSourceBook],
+                                ['Faction', sheet.factionName, navState?.factionSourceBook],
+                                ['Role',    sheet.roleName,    navState?.roleSourceBook],
+                            ].map(([label, val, sb]) => {
+                                const violated = isViolated(sb);
+                                return (
+                                    <div key={label} className="char-id-cell" style={violated ? {
+                                        background: 'rgba(180,40,40,0.12)',
+                                        borderColor: 'rgba(180,40,40,0.45)',
+                                    } : {}}>
+                                        <div className="char-id-label" style={violated ? {color: 'var(--red)'} : {}}>
+                                            {label}{violated && <span style={{marginLeft: '6px', fontSize: '9px', letterSpacing: '1px'}}>[{sb}]</span>}
+                                        </div>
+                                        <div className="char-id-value" style={violated ? {color: 'var(--red)'} : {}}>{val || '—'}</div>
+                                    </div>
+                                );
+                            })}
+                            {patronPreview && (
+                                <div className="char-id-cell" style={{cursor: 'pointer', borderLeft: '1px solid var(--border)'}}
+                                     onClick={() => window.open(`/patron?code=${navState.patronCode}`, '_blank')}>
+                                    <div className="char-id-label" style={{color: '#085d65'}}>Patron</div>
+                                    <div className="char-id-value">{patronPreview.patronName || '—'}</div>
+                                    {patronPreview.dutyName && (
+                                        <div style={{
+                                            fontFamily: "'Barlow', sans-serif", fontSize: '10px',
+                                            color: 'var(--muted)', marginTop: '2px', letterSpacing: '0.5px',
+                                        }}>{patronPreview.dutyName}</div>
+                                    )}
                                 </div>
-                            ))}
+                            )}
                             <div className="char-id-cell" style={{flex: '0 0 auto', minWidth: '160px', borderLeft: '1px solid var(--border)'}}>
                                 <div className="char-id-label">XP</div>
                                 <div className="fate-stack">
@@ -885,7 +933,7 @@ export default function SummaryPage() {
                     </div>
 
                     {/* ── ACTIONS BAR ── */}
-                    <div className="page-actions">
+                    {!viewCode && <div className="page-actions">
                         {saveCode && (
                             <div className="save-code-box">
                                 Saved — Code: <strong>{saveCode}</strong>
@@ -911,7 +959,7 @@ export default function SummaryPage() {
                                    onChange={e => setLoadInput(e.target.value)}/>
                             <button className="action-btn secondary" onClick={handleLoad}>Load</button>
                         </div>
-                    </div>
+                    </div>}
 
                     {/* ══════════════════════════════════════
               PAGE 1 — CHARACTERISTICS · STATS
@@ -1811,9 +1859,11 @@ export default function SummaryPage() {
 
                     {/* ── Bottom actions ── */}
                     <div className="page-actions">
-                        <button className="action-btn" onClick={handleSave}
-                                disabled={saving}>{saving ? 'Saving…' : saveCode ? 'Save Again' : 'Save Character'}</button>
-                        {saveCode && (
+                        {!viewCode && (
+                            <button className="action-btn" onClick={handleSave}
+                                    disabled={saving}>{saving ? 'Saving…' : saveCode ? 'Save Again' : 'Save Character'}</button>
+                        )}
+                        {!viewCode && saveCode && (
                             <div className="save-code-box">
                                 Code: <strong>{saveCode}</strong>
                                 <button className={`copy-btn${copied ? ' copied' : ''}`}
@@ -1822,6 +1872,9 @@ export default function SummaryPage() {
                         )}
                         <button className="action-btn secondary" onClick={() => window.print()}>Print / Save PDF
                         </button>
+                        {viewCode && (
+                            <button className="action-btn secondary" onClick={() => navigate(-1)}>← Back</button>
+                        )}
                     </div>
 
                 </div>

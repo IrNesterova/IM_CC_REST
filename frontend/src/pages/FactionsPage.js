@@ -28,7 +28,7 @@ export default function FactionsPage() {
     const [gradeChoices, setGradeChoices] = useState({});
 
     const navigate = useNavigate();
-    const {ccm, dispatch} = useCharacter();
+    const {ccm, dispatch, allowedSourceBooks} = useCharacter();
 
     const MAX_SKILL_ADVANCES = 5;
     const MAX_PER_SKILL = 2;
@@ -45,8 +45,12 @@ export default function FactionsPage() {
     useEffect(() => {
         Promise.all([getFactions(), getEquipmentPacks()])
             .then(([f, p]) => {
-                const fList = Array.isArray(f) ? f : [];
-                const pList = Array.isArray(p) ? p : [];
+                const fList = allowedSourceBooks
+                    ? (Array.isArray(f) ? f : []).filter(x => allowedSourceBooks.includes(x.sourceBook))
+                    : (Array.isArray(f) ? f : []);
+                const pList = allowedSourceBooks
+                    ? (Array.isArray(p) ? p : []).filter(x => allowedSourceBooks.includes(x.sourceBook))
+                    : (Array.isArray(p) ? p : []);
                 setFactions(fList);
                 setPacks(pList);
                 if (fList.length > 0) {

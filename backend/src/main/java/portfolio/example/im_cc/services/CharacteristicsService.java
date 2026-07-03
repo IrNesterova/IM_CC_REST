@@ -1,6 +1,6 @@
 package portfolio.example.im_cc.services;
 
-import portfolio.example.im_cc.models.Characteristics;
+import portfolio.example.im_cc.models.characterwizard.Characteristics;
 
 import java.util.List;
 

@@ -2,8 +2,8 @@ package portfolio.example.im_cc.controllers.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import portfolio.example.im_cc.models.GameCondition;
-import portfolio.example.im_cc.repositories.GameConditionRepository;
+import portfolio.example.im_cc.models.characterwizard.GameCondition;
+import portfolio.example.im_cc.repositories.characterwizard.GameConditionRepository;
 
 import java.util.List;
 

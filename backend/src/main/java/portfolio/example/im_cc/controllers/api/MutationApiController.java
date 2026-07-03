@@ -1,14 +1,16 @@
 package portfolio.example.im_cc.controllers.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import portfolio.example.im_cc.models.Mutation;
-import portfolio.example.im_cc.models.SubtleMutationTableEntry;
-import portfolio.example.im_cc.repositories.SubtleMutationTableRepository;
+import portfolio.example.im_cc.models.characterwizard.Mutation;
+import portfolio.example.im_cc.models.characterwizard.SubtleMutationTableEntry;
+import portfolio.example.im_cc.repositories.characterwizard.SubtleMutationTableRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Transactional(readOnly = true)
 @RestController
 @RequestMapping("/api/mutations")
 public class MutationApiController {
