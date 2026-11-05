@@ -12,6 +12,7 @@ export const register = (email, password, displayName) =>
 export const login = (email, password) =>
     api.post('/auth/login', {email, password}).then(r => r.data);
 export const logout = () => api.post('/auth/logout');
+export const getAuthProviders = () => api.get('/auth/providers').then(r => r.data);
 export const getMe = () => api.get('/me').then(r => r.data);
 export const getMyCharacters = () => api.get('/me/characters').then(r => r.data);
 export const saveWebhookUrl = (webhookUrl) => api.put('/me/webhook', {webhookUrl});

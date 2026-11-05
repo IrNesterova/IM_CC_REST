@@ -2,6 +2,7 @@ package portfolio.example.im_cc.controllers.api;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -11,8 +12,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,12 +31,20 @@ public class AuthApiController {
     private final AuthenticationManager authenticationManager;
     private final AppUserRepository users;
     private final PasswordEncoder encoder;
+    private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
     private final SecurityContextRepository contextRepository = new HttpSessionSecurityContextRepository();
 
-    public AuthApiController(AuthenticationManager authenticationManager, AppUserRepository users, PasswordEncoder encoder) {
+    public AuthApiController(AuthenticationManager authenticationManager, AppUserRepository users, PasswordEncoder encoder,
+                             ObjectProvider<ClientRegistrationRepository> clientRegistrations) {
         this.authenticationManager = authenticationManager;
         this.users = users;
         this.encoder = encoder;
+        this.clientRegistrations = clientRegistrations;
+    }
+
+    @GetMapping("/providers")
+    public Map<String, Boolean> providers() {
+        return Map.of("discord", clientRegistrations.getIfAvailable() != null);
     }
 
     @PostMapping("/register")

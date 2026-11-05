@@ -29,6 +29,7 @@ A full-stack web application for creating characters in the **Imperium Maledictu
 - Node.js (18+)
 - PostgreSQL running on `localhost:5432`
   - Database: `postgres`, user: `postgres`, password: `123`
+- Optional: set `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` to enable Discord login. Without them, only email/password login is available.
 
 ## Running Locally
 
