@@ -1,14 +1,16 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {getFactions, getEquipmentPacks} from '../api/api';
+import {getFactions, getEquipmentPacks, reportError} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
 import Topbar from '../components/Topbar';
 import ProgressBar from '../components/ProgressBar';
+import LoadError from '../components/LoadError';
 
 export default function FactionsPage() {
     const [factions, setFactions] = useState([]);
     const [packs, setPacks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
     const [selected, setSelected] = useState(null);
     const [secondaryCharId, setSecondaryCharId] = useState('');
     const [skillAdvances, setSkillAdvances] = useState({});
@@ -93,7 +95,7 @@ export default function FactionsPage() {
                     setEquipTab('pack');
                 }
             })
-            .catch(err => console.error('Failed to load factions/packs:', err))
+            .catch(err => { reportError(err); setLoadFailed(true); })
             .finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -317,6 +319,8 @@ export default function FactionsPage() {
         }
         navigate('/roles');
     };
+
+    if (loadFailed) return <><ProgressBar/><Topbar/><LoadError message="Could not load factions."/></>;
 
     if (loading) return (
         <><ProgressBar/><Topbar/>

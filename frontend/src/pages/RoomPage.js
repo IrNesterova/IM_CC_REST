@@ -6,6 +6,7 @@ import {changeRoomStatus, getMyCharacters, getPatronPreview, getRoom, getRoster,
 import {useAuth} from '../context/AuthContext';
 import {useCharacter} from '../context/CharacterContext';
 import Topbar from '../components/Topbar';
+import ErrorToast from '../components/ErrorToast';
 
 const ROLE_LABEL = {GM: 'GM', PLAYER: 'Player'};
 const STATUS_COLOR = {ACTIVE: 'var(--ink)', LEFT: 'var(--muted)'};
@@ -20,6 +21,7 @@ export default function RoomPage() {
     const [room, setRoom] = useState(state?.room || null);
     const [roster, setRoster] = useState([]);
     const [rosterError, setRosterError] = useState('');
+    const [actionError, setActionError] = useState('');
     const [copied, setCopied] = useState(false);
     const [leaving, setLeaving] = useState(false);
     const [myCharacters, setMyCharacters] = useState([]);
@@ -48,7 +50,7 @@ export default function RoomPage() {
     }, [roomId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
-        getMyCharacters().then(setMyCharacters).catch(() => {});
+        getMyCharacters().then(setMyCharacters).catch(() => setActionError('Could not load your characters.'));
     }, []);
 
     useEffect(() => {
@@ -160,6 +162,7 @@ export default function RoomPage() {
             }
             navigate('/cabinet', {state: {tab: 'rooms'}});
         } catch {
+            setActionError('Could not leave the room.');
             setLeaving(false);
         }
     };
@@ -171,6 +174,7 @@ export default function RoomPage() {
             await selectCharacter(roomId, code);
         } catch (e) {
             console.error('Failed to select character', e);
+            setActionError('Could not select this character.');
         } finally {
             setSelectingChar(false);
         }
@@ -189,6 +193,7 @@ export default function RoomPage() {
             setRoom(prev => prev ? {...prev, sourceBooks: updated.sourceBooks} : prev);
         } catch (e) {
             console.error('Failed to update source books', e);
+            setActionError('Could not update source books.');
         }
     };
 
@@ -200,6 +205,7 @@ export default function RoomPage() {
             setTimeout(() => setWebhookSaved(false), 2000);
         } catch (e) {
             console.error('Failed to save webhook', e);
+            setActionError('Could not save the webhook.');
         }
     };
 
@@ -213,6 +219,7 @@ export default function RoomPage() {
             setTimeout(() => setPatronSaved(false), 2000);
         } catch (e) {
             console.error('Failed to set patron', e);
+            setActionError('Could not set the patron.');
         }
     };
 
@@ -225,6 +232,7 @@ export default function RoomPage() {
     return (
         <>
             <Topbar/>
+            <ErrorToast message={actionError} onClose={() => setActionError('')}/>
             <main style={{
                 flex: 1, background: 'var(--bg)',
                 display: 'flex', justifyContent: 'center',

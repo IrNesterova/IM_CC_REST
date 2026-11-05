@@ -1,14 +1,16 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {getRoles} from '../api/api';
+import {getRoles, reportError} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
 import Topbar from '../components/Topbar';
 import ProgressBar from '../components/ProgressBar';
+import LoadError from '../components/LoadError';
 
 export default function RolesPage() {
     const [roles, setRoles] = useState([]);
     const [selected, setSelected] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
     const [roleChoices, setRoleChoices] = useState({});
     const [roleSkillAdv, setRoleSkillAdv] = useState({});
     const [roleSpecAdv, setRoleSpecAdv] = useState({});
@@ -35,7 +37,7 @@ export default function RolesPage() {
                     selectRole(filtered[0]);
                 }
             }
-        }).finally(() => setLoading(false));
+        }).catch(err => { reportError(err); setLoadFailed(true); }).finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const selectRole = (role) => {
@@ -135,6 +137,8 @@ export default function RolesPage() {
     };
 
     const packChosen = !!ccm.equipmentPackId;
+
+    if (loadFailed) return <><ProgressBar/><Topbar/><LoadError message="Could not load roles."/></>;
 
     if (loading) return (
         <><ProgressBar/><Topbar/>

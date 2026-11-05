@@ -115,3 +115,11 @@ export const logFrontendError = (payload) => {
     api.post('/error-log', payload).catch(() => {});
 };
 
+// For errors a page handles itself, which would otherwise never reach the global handlers.
+export const reportError = (err) => logFrontendError({
+    errorType: 'HandledError',
+    message: err?.message || String(err),
+    stackTrace: err?.stack || null,
+    url: window.location.href,
+});
+
