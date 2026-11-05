@@ -1,10 +1,14 @@
 package portfolio.example.im_cc.services;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+// Must run before GlobalExceptionHandler, whose catch-all would otherwise turn these into 500s.
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 public class LobbyExceptionHandler {
     @ExceptionHandler(LobbyException.class)
