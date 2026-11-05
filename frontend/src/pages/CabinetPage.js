@@ -1,9 +1,10 @@
 import {useEffect, useState} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
-import {createRoom, deleteCharacter, getMyCharacters, getMyRooms, joinRoom, loadCharacter} from '../api/api';
+import {createRoom, deleteCharacter, getMyCharacters, getMyRooms, joinRoom, loadCharacter, reportError} from '../api/api';
 import {useAuth} from '../context/AuthContext';
 import {useCharacter} from '../context/CharacterContext';
 import Topbar from '../components/Topbar';
+import ErrorToast from '../components/ErrorToast';
 
 function formatDate(iso) {
     if (!iso) return '—';
@@ -22,6 +23,8 @@ export default function CabinetPage() {
     // Characters state
     const [chars, setChars] = useState([]);
     const [loadingChars, setLoadingChars] = useState(true);
+    const [charsFailed, setCharsFailed] = useState(false);
+    const [actionError, setActionError] = useState('');
     const [deletingCode, setDeletingCode] = useState(null);
 
     // Rooms state
@@ -38,9 +41,17 @@ export default function CabinetPage() {
         if (!user) { navigate('/login'); return; }
         getMyCharacters()
             .then(setChars)
-            .catch(err => { if (err?.response?.status === 401) navigate('/login'); })
+            .catch(err => {
+                if (err?.response?.status === 401) { navigate('/login'); return; }
+                reportError(err);
+                setCharsFailed(true);
+            })
             .finally(() => setLoadingChars(false));
-        getMyRooms().then(setMyRooms).catch(() => {});
+        getMyRooms().then(setMyRooms).catch(err => {
+            if (err?.response?.status === 401) return;
+            reportError(err);
+            setActionError('Could not load your rooms.');
+        });
     }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const newCharacter = () => {
@@ -49,18 +60,29 @@ export default function CabinetPage() {
     };
 
     const openChar = async (code) => {
-        const raw = await loadCharacter(code);
-        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-        const ccm = parsed.ccm || parsed;
-        dispatch({type: 'RESTORE', payload: ccm});
-        navigate('/summary');
+        try {
+            const raw = await loadCharacter(code);
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            const ccm = parsed.ccm || parsed;
+            dispatch({type: 'RESTORE', payload: ccm});
+            navigate('/summary');
+        } catch (err) {
+            reportError(err);
+            setActionError('Could not open this character.');
+        }
     };
 
     const removeChar = async (code) => {
         setDeletingCode(code);
-        await deleteCharacter(code);
-        setChars(cs => cs.filter(c => c.code !== code));
-        setDeletingCode(null);
+        try {
+            await deleteCharacter(code);
+            setChars(cs => cs.filter(c => c.code !== code));
+        } catch (err) {
+            reportError(err);
+            setActionError('Could not delete this character.');
+        } finally {
+            setDeletingCode(null);
+        }
     };
 
     const handleCreateRoom = async () => {
@@ -100,6 +122,7 @@ export default function CabinetPage() {
     return (
         <>
             <Topbar/>
+            <ErrorToast message={actionError} onClose={() => setActionError('')}/>
             <main style={{flex: 1, background: 'var(--bg)', display: 'flex', justifyContent: 'center', padding: '60px 24px'}}>
                 <div style={{maxWidth: '680px', width: '100%', display: 'flex', flexDirection: 'column', gap: '16px'}}>
 
@@ -172,7 +195,7 @@ export default function CabinetPage() {
                                 <div style={{fontFamily: "'Barlow', sans-serif", fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--muted)'}}>
                                     Saved characters
                                 </div>
-                                {!loadingChars && (
+                                {!loadingChars && !charsFailed && (
                                     <div style={{fontFamily: "'Barlow', sans-serif", fontSize: '11px', color: 'var(--muted)', letterSpacing: '1px'}}>
                                         {chars.length} {chars.length === 1 ? 'record' : 'records'}
                                     </div>
@@ -182,6 +205,10 @@ export default function CabinetPage() {
                             {loadingChars ? (
                                 <div style={{padding: '48px', textAlign: 'center', fontFamily: "'Barlow', sans-serif", fontSize: '12px', letterSpacing: '3px', color: 'var(--muted)', textTransform: 'uppercase'}}>
                                     Loading…
+                                </div>
+                            ) : charsFailed ? (
+                                <div role="alert" style={{padding: '48px', textAlign: 'center', fontFamily: "'Barlow', sans-serif", fontSize: '13px', color: 'var(--ink)', letterSpacing: '1px'}}>
+                                    Could not load your characters. Please reload the page.
                                 </div>
                             ) : chars.length === 0 ? (
                                 <div style={{padding: '48px', textAlign: 'center'}}>

@@ -1,7 +1,9 @@
 import {useEffect, useRef, useState} from 'react';
 import {useNavigate, useSearchParams} from 'react-router-dom';
-import {getPatronReference, loadPatron, savePatron} from '../api/api';
+import {getPatronReference, loadPatron, savePatron, reportError} from '../api/api';
 import Topbar from '../components/Topbar';
+import LoadError from '../components/LoadError';
+import ErrorToast from '../components/ErrorToast';
 
 /* ── Shared style constants ── */
 const SECTION = {
@@ -267,6 +269,8 @@ export default function PatronPage() {
         factions: [], motivations: [], demeanours: [], paymentGrades: [], duties: [],
     });
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
+    const [saveError, setSaveError] = useState('');
     const [saveCode, setSaveCode] = useState(searchParams.get('code') || null);
     const [saving, setSaving] = useState(false);
     const [saveFlash, setSaveFlash] = useState('');
@@ -312,14 +316,22 @@ export default function PatronPage() {
                     if (p.influenceRows) setInfluenceRows(p.influenceRows);
                     setNotes(p.notes || '');
                     setSaveCode(code);
-                }).catch(() => {});
+                }).catch(err => {
+                    reportError(err);
+                    setLoadError(err?.response?.status === 404 ? 'Patron not found.' : 'Could not load this patron.');
+                });
             }
             setLoading(false);
-        }).catch(() => setLoading(false));
+        }).catch(err => {
+            reportError(err);
+            setLoadError('Could not load patron data.');
+            setLoading(false);
+        });
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSave = async () => {
         setSaving(true);
+        setSaveError('');
         try {
             const payload = JSON.stringify({
                 patronName,
@@ -348,6 +360,7 @@ export default function PatronPage() {
             setTimeout(() => setSaveFlash(''), 3000);
         } catch (e) {
             console.error('Failed to save patron', e);
+            setSaveError('Could not save the patron. Please try again.');
         } finally {
             setSaving(false);
         }
@@ -436,6 +449,8 @@ export default function PatronPage() {
     const updateInfluenceRow = (i, field, val) =>
         setInfluenceRows(prev => prev.map((r, idx) => idx === i ? {...r, [field]: val} : r));
 
+    if (loadError) return <><Topbar/><LoadError message={loadError}/></>;
+
     if (loading) {
         return (
             <>
@@ -452,6 +467,7 @@ export default function PatronPage() {
     return (
         <>
             <Topbar/>
+            <ErrorToast message={saveError} onClose={() => setSaveError('')}/>
             <main style={{flex: 1, background: 'var(--bg)', padding: '40px 24px 80px'}}>
                 <div style={{maxWidth: '1100px', margin: '0 auto'}}>
 

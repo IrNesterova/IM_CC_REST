@@ -12,6 +12,7 @@ export const register = (email, password, displayName) =>
 export const login = (email, password) =>
     api.post('/auth/login', {email, password}).then(r => r.data);
 export const logout = () => api.post('/auth/logout');
+export const getAuthProviders = () => api.get('/auth/providers').then(r => r.data);
 export const getMe = () => api.get('/me').then(r => r.data);
 export const getMyCharacters = () => api.get('/me/characters').then(r => r.data);
 export const saveWebhookUrl = (webhookUrl) => api.put('/me/webhook', {webhookUrl});
@@ -113,4 +114,12 @@ export const logFrontendError = (payload) => {
     // Fire-and-forget: never throws, never blocks the caller
     api.post('/error-log', payload).catch(() => {});
 };
+
+// For errors a page handles itself, which would otherwise never reach the global handlers.
+export const reportError = (err) => logFrontendError({
+    errorType: 'HandledError',
+    message: err?.message || String(err),
+    stackTrace: err?.stack || null,
+    url: window.location.href,
+});
 

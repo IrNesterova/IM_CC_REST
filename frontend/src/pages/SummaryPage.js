@@ -1,10 +1,12 @@
 import {useEffect, useState, useMemo, useCallback, useRef} from 'react';
 import {useNavigate, useParams, useLocation} from 'react-router-dom';
-import {buildSummary, saveCharacter, loadCharacter, getPsychicDisciplines, getInjuries, lookupCriticalWound, getConditions, getPatronPreview} from '../api/api';
+import {buildSummary, saveCharacter, loadCharacter, getPsychicDisciplines, getInjuries, lookupCriticalWound, getConditions, getPatronPreview, reportError} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
 import {useAuth} from '../context/AuthContext';
 import Topbar from '../components/Topbar';
 import ProgressBar from '../components/ProgressBar';
+import LoadError from '../components/LoadError';
+import ErrorToast from '../components/ErrorToast';
 
 const RANDOM_TALENT_TABLE = [
     [1,  10, 'ACUTE SENSE'],
@@ -75,6 +77,8 @@ export default function SummaryPage() {
     const isViolated = (sb) => roomAllowed && sb && !roomAllowed.includes(sb); // present on /character/:code route → read-only view mode
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
+    const [saveError, setSaveError] = useState('');
     const [saveCode, setSaveCode] = useState(null);
     const [saving, setSaving] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -187,7 +191,10 @@ export default function SummaryPage() {
                 setData(d);
                 setDisciplines(disc);
             })
-            .catch(() => {})
+            .catch(err => {
+                reportError(err);
+                setLoadError(err?.response?.status === 404 ? 'Character not found.' : 'Could not build the character sheet.');
+            })
             .finally(() => setLoading(false));
         getInjuries().then(inj => setAllInjuries(inj || [])).catch(() => {});
         getConditions().then(c => setAllConditions(c || [])).catch(() => {});
@@ -632,12 +639,14 @@ export default function SummaryPage() {
     // ── Save ──────────────────────────────────────────────────────
     const handleSave = async () => {
         setSaving(true);
+        setSaveError('');
         try {
             const payload = JSON.stringify({ccm, edits: {characterName: charName}});
             const result = await saveCharacter(payload, saveCode);
             setSaveCode(result.code);
         } catch (e) {
             console.error(e);
+            setSaveError('Could not save the character. Please try again.');
         } finally {
             setSaving(false);
         }
@@ -845,7 +854,7 @@ export default function SummaryPage() {
         </>
     );
 
-    if (!data) return null;
+    if (!data) return <>{!viewCode && <ProgressBar/>}<Topbar/><LoadError message={loadError || 'Could not build the character sheet.'}/></>;
 
     const {sheet} = data;
     const charKeys = Object.keys(charStart);
@@ -1879,6 +1888,8 @@ export default function SummaryPage() {
 
                 </div>
             </div>
+
+            <ErrorToast message={saveError} onClose={() => setSaveError('')}/>
 
             {/* ── Roll modal ── */}
             {rollModal && (

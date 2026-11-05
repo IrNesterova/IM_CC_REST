@@ -1,9 +1,10 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {getOrigins, getAugmetics, getSubtleMutationsTable} from '../api/api';
+import {getOrigins, getAugmetics, getSubtleMutationsTable, reportError} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
 import Topbar from '../components/Topbar';
 import ProgressBar from '../components/ProgressBar';
+import LoadError from '../components/LoadError';
 
 export default function OriginsPage() {
     const [origins, setOrigins]         = useState([]);
@@ -21,6 +22,7 @@ export default function OriginsPage() {
     const [positiveRoll, setPositiveRoll]         = useState(null);
     const [negativeRoll, setNegativeRoll]         = useState(null);
     const [loading, setLoading]                   = useState(true);
+    const [loadFailed, setLoadFailed]             = useState(false);
     const navigate  = useNavigate();
     const {ccm, dispatch, allowedSourceBooks} = useCharacter();
 
@@ -34,7 +36,7 @@ export default function OriginsPage() {
                 const saved = ccm.originId ? filtered.find(o => o.id === ccm.originId) : null;
                 setSelected(saved || filtered[0]);
             }
-        }).finally(() => setLoading(false));
+        }).catch(err => { reportError(err); setLoadFailed(true); }).finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
@@ -284,6 +286,8 @@ export default function OriginsPage() {
         return acc;
     }, {});
     const amOrigins = origins.filter(o => o.sourceBook === 'AM');
+
+    if (loadFailed) return <><ProgressBar/><Topbar/><LoadError message="Could not load origins."/></>;
 
     if (loading) return (
         <><ProgressBar/><Topbar/>

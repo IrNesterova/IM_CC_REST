@@ -1,9 +1,10 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {getCharacteristics} from '../api/api';
+import {getCharacteristics, reportError} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
 import Topbar from '../components/Topbar';
 import ProgressBar from '../components/ProgressBar';
+import LoadError from '../components/LoadError';
 
 const POOL_TOTAL = 90;
 const BASE_VAL = 20;
@@ -15,6 +16,7 @@ export default function CharacteristicsPage() {
     const [values, setValues] = useState({});
     const [mode, setMode] = useState('manual');
     const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
     const navigate = useNavigate();
     const {ccm, dispatch} = useCharacter();
 
@@ -26,7 +28,7 @@ export default function CharacteristicsPage() {
                 init[c.name] = ccm.characteristics[c.name] || String(MIN_VAL);
             });
             setValues(init);
-        }).finally(() => setLoading(false));
+        }).catch(err => { reportError(err); setLoadFailed(true); }).finally(() => setLoading(false));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const remaining = POOL_TOTAL - chars.reduce((s, c) => s + (parseInt(values[c.name] || 0) - BASE_VAL), 0);
@@ -62,6 +64,8 @@ export default function CharacteristicsPage() {
         dispatch({type: 'SET_CHARACTERISTICS', payload: values});
         navigate('/origins');
     };
+
+    if (loadFailed) return <><ProgressBar/><Topbar/><LoadError message="Could not load characteristics."/></>;
 
     if (loading) return (
         <><ProgressBar/><Topbar/>
