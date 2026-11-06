@@ -159,8 +159,11 @@ public class SummaryServiceImpl {
             });
         }
 
-        if (ccm.getFactionId() != null) {
-            Faction faction = factionRepository.findById(ccm.getFactionId()).orElseThrow();
+        // A faction or role id from an old browser session may no longer exist (ids renumbered, data
+        // reseeded). Build the rest of the sheet without it instead of failing the whole request.
+        Faction faction = ccm.getFactionId() == null ? null
+                : factionRepository.findById(ccm.getFactionId()).orElse(null);
+        if (faction != null) {
 
             factionTalentRepository.findFactionTalentsByFaction(faction)
                 .forEach(ft -> talents.add(ft.getTalent().getName()));
@@ -179,10 +182,12 @@ public class SummaryServiceImpl {
                     });
             }
 
-            for (Map.Entry<Long, List<Long>> entry : ccm.getFactionChoices().entrySet()) {
+            Map<Long, List<Long>> factionChoices = ccm.getFactionChoices() != null ? ccm.getFactionChoices() : Map.of();
+            for (Map.Entry<Long, List<Long>> entry : factionChoices.entrySet()) {
                 FactionChoiceGroup group = factionChoiceGroupRepository
                     .findById(entry.getKey()).orElse(null);
-                if (group == null) continue;
+                // Choices left over from another faction must not grant that faction's talents or items.
+                if (group == null || group.getFaction() == null || !faction.getId().equals(group.getFaction().getId())) continue;
                 List<Long> optionIds = entry.getValue();
                 if (optionIds == null) continue;
                 for (Long optionId : optionIds) {
@@ -207,8 +212,10 @@ public class SummaryServiceImpl {
         }
 
         // ── AM GRADE TALENTS & ITEMS ──────────────────────────────────
-        if (ccm.getFactionGradeId() != null) {
-            factionGradeRepository.findById(ccm.getFactionGradeId()).ifPresent(grade -> {
+        if (faction != null && ccm.getFactionGradeId() != null) {
+            factionGradeRepository.findById(ccm.getFactionGradeId())
+                .filter(grade -> grade.getFaction() != null && faction.getId().equals(grade.getFaction().getId()))
+                .ifPresent(grade -> {
                 factionGradeTalentRepository.findByGrade(grade)
                     .forEach(gt -> talents.add(gt.getTalent().getName()));
 
@@ -248,8 +255,9 @@ public class SummaryServiceImpl {
             });
         }
 
-        if (ccm.getRoleId() != null) {
-            Role role = roleRepository.findById(ccm.getRoleId()).orElseThrow();
+        Role role = ccm.getRoleId() == null ? null
+                : roleRepository.findById(ccm.getRoleId()).orElse(null);
+        if (role != null) {
 
             if (!usePack) {
                 roleInventoryRepository.findByRole(role)
@@ -263,7 +271,8 @@ public class SummaryServiceImpl {
 
             List<RoleChoiceGroup> groups = roleChoiceGroupRepository.findByRole(role);
             for (RoleChoiceGroup group : groups) {
-                List<Long> selected = ccm.getRoleChoices().getOrDefault(group.getId(), List.of());
+                List<Long> selected = ccm.getRoleChoices() == null ? List.of()
+                        : ccm.getRoleChoices().getOrDefault(group.getId(), List.of());
                 if (selected.isEmpty()) continue;
 
                 switch (group.getChoiceType()) {
