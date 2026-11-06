@@ -5,6 +5,7 @@ import SockJS from 'sockjs-client';
 import {changeRoomStatus, getMyCharacters, getPatronPreview, getRoom, getRoster, leaveRoom, selectCharacter, setRoomPatron, updateRoomSourceBooks, updateRoomWebhook, WS_URL} from '../api/api';
 import {useAuth} from '../context/AuthContext';
 import {useCharacter} from '../context/CharacterContext';
+import {startNewCharacter} from '../utils/savedCharacter';
 import Topbar from '../components/Topbar';
 import ErrorToast from '../components/ErrorToast';
 
@@ -225,7 +226,7 @@ export default function RoomPage() {
 
     const handleCreateCharacter = () => {
         setAllowedSourceBooks(room?.sourceBooks ? [...room.sourceBooks] : null);
-        dispatch({type: 'RESET'});
+        startNewCharacter(dispatch);
         navigate('/characteristics', {state: {webhookUrl: room?.webhookUrl || null}});
     };
 

@@ -1,5 +1,5 @@
 import {BrowserRouter, Routes, Route, Navigate} from 'react-router-dom';
-import {CharacterProvider} from './context/CharacterContext';
+import {CharacterProvider, useCharacter} from './context/CharacterContext';
 import BugReport from './components/BugReport';
 import ProtectedRoute from './components/ProtectedRoute';
 import {AuthProvider} from './context/AuthContext';
@@ -17,6 +17,12 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PatronPage from './pages/PatronPage';
 
+// Opening a saved character while the sheet is already shown must rebuild it from scratch.
+function EditableSummary() {
+    const {ccm} = useCharacter();
+    return <SummaryPage key={ccm._loadedAt || 'current'}/>;
+}
+
 export default function App() {
     return (
         <BrowserRouter>
@@ -30,7 +36,7 @@ export default function App() {
                         <Route path="/factions" element={<FactionsPage/>}/>
                         <Route path="/roles" element={<RolesPage/>}/>
                         <Route path="/details" element={<DetailsPage/>}/>
-                        <Route path="/summary" element={<SummaryPage/>}/>
+                        <Route path="/summary" element={<EditableSummary/>}/>
                         <Route path="/character/:code" element={<SummaryPage/>}/>
                         {/* новые маршруты кабинета */}
                         <Route path="/login" element={<LoginPage/>}/>

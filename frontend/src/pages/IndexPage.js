@@ -3,6 +3,7 @@ import {useNavigate, Link} from 'react-router-dom';
 import {loadCharacter} from '../api/api';
 
 import {useCharacter} from '../context/CharacterContext';
+import {restoreSavedCharacter, startNewCharacter} from '../utils/savedCharacter';
 import {useAuth} from '../context/AuthContext';
 import Topbar from '../components/Topbar';
 
@@ -24,10 +25,7 @@ export default function IndexPage() {
             return;
         }
         try {
-            const raw = await loadCharacter(c);
-            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-            const ccm = parsed.ccm || parsed;
-            dispatch({type: 'RESTORE', payload: ccm});
+            restoreSavedCharacter(dispatch, c, await loadCharacter(c));
             navigate('/summary');
         } catch {
             setError('Character not found.');
@@ -106,7 +104,7 @@ export default function IndexPage() {
                     </ul>
 
                     <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                        <button onClick={() => { dispatch({type: 'RESET'}); navigate('/characteristics'); }} style={{
+                        <button onClick={() => { startNewCharacter(dispatch); navigate('/characteristics'); }} style={{
                             display: 'block', width: '100%', padding: '16px 28px',
                             fontFamily: "'Barlow', sans-serif", fontSize: '12px', fontWeight: 600,
                             letterSpacing: '3px', textTransform: 'uppercase', textAlign: 'center',

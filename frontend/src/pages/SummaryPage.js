@@ -2,6 +2,7 @@ import {useEffect, useState, useMemo, useCallback, useRef} from 'react';
 import {useNavigate, useParams, useLocation} from 'react-router-dom';
 import {buildSummary, saveCharacter, loadCharacter, getPsychicDisciplines, getInjuries, lookupCriticalWound, getConditions, getPatronPreview, reportError} from '../api/api';
 import {useCharacter} from '../context/CharacterContext';
+import {readLegacySheet, readSheet, restoreSavedCharacter, savePayload, sheetKey, writeSheet, clearDraftSheet} from '../utils/savedCharacter';
 import {useAuth} from '../context/AuthContext';
 import Topbar from '../components/Topbar';
 import ProgressBar from '../components/ProgressBar';
@@ -79,7 +80,7 @@ export default function SummaryPage() {
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
     const [saveError, setSaveError] = useState('');
-    const [saveCode, setSaveCode] = useState(null);
+    const [saveCode, setSaveCode] = useState(ccm._saveCode || null);
     const [saving, setSaving] = useState(false);
     const [copied, setCopied] = useState(false);
     const [loadInput, setLoadInput] = useState('');
@@ -117,6 +118,7 @@ export default function SummaryPage() {
     const toastDragRef = useRef(false);
     const initializedRef = useRef(false);
     const loadedCcmRef = useRef(null);
+    const loadedSheetRef = useRef(null);
     const [rolling, setRolling] = useState(false);
     const [rollModal, setRollModal] = useState(null);
     const [rollMode, setRollMode] = useState('normal');
@@ -179,12 +181,17 @@ export default function SummaryPage() {
         traits: ''
     })));
 
-    const summaryStorageKey = `im_cc_summary_${ccm.originId ?? 'x'}_${ccm.factionId ?? 'x'}_${ccm.roleId ?? 'x'}`;
+    // Sheet edits are kept in the browser per save code (one draft before the first save). View mode
+    // (/character/:code) shows the sheet stored with that save and writes nothing to this browser.
+    const sheetStorageKey = viewCode ? null : sheetKey(saveCode);
 
     useEffect(() => {
         setLoading(true);
         const ccmPromise = viewCode
-            ? loadCharacter(viewCode).then(result => result?.ccm)
+            ? loadCharacter(viewCode).then(result => {
+                loadedSheetRef.current = result?.sheet || null;
+                return result?.ccm;
+            })
             : Promise.resolve(ccm);
         ccmPromise
             .then(resolvedCcm => {
@@ -331,9 +338,10 @@ export default function SummaryPage() {
         });
 
         try {
-            const stored = localStorage.getItem(summaryStorageKey);
-            if (stored) {
-                const e = JSON.parse(stored);
+            const e = viewCode
+                ? loadedSheetRef.current
+                : (readSheet(sheetStorageKey) ?? readLegacySheet(ccm));
+            if (e) {
                 if (e.charName !== undefined) setCharName(e.charName);
                 if (e.charStart) setCharStart(e.charStart);
                 if (e.charAdv) setCharAdv(e.charAdv);
@@ -378,21 +386,22 @@ export default function SummaryPage() {
     }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Derived values ───────────────────────────────────────────
+    // Everything the player can edit on the sheet: stored in the browser and sent with every save.
+    const currentSheet = () => ({
+        charName, charStart, charAdv, skillAdv, specAdv,
+        talents, mutations, augmetics, equipment, weaponRows,
+        fateTotal, fateCur, startingMoney, solarsAmount,
+        woundsCur, critWounds, superiority, corruption, handedness,
+        protection, critTable, injuries, activeConditions, influence,
+        age, height, eyes, hairColor, hairStyle, distFeatures,
+        divination, shortGoal, longGoal, biography,
+        knownPowers, extraSpecs, xpTotal, xpSpent,
+    });
+
     useEffect(() => {
-        if (!initializedRef.current) return;
-        try {
-            localStorage.setItem(summaryStorageKey, JSON.stringify({
-                charName, charStart, charAdv, skillAdv, specAdv,
-                talents, mutations, augmetics, equipment, weaponRows,
-                fateTotal, fateCur, startingMoney, solarsAmount,
-                woundsCur, critWounds, superiority, corruption, handedness,
-                protection, critTable, injuries, activeConditions, influence,
-                age, height, eyes, hairColor, hairStyle, distFeatures,
-                divination, shortGoal, longGoal, biography,
-                knownPowers, extraSpecs, xpTotal, xpSpent,
-            }));
-        } catch {}
-    }, [charName, charStart, charAdv, skillAdv, specAdv,
+        if (!initializedRef.current || !sheetStorageKey) return;
+        writeSheet(sheetStorageKey, currentSheet());
+    }, [sheetStorageKey, charName, charStart, charAdv, skillAdv, specAdv,
         talents, mutations, augmetics, equipment, weaponRows,
         fateTotal, fateCur, startingMoney, solarsAmount,
         woundsCur, critWounds, superiority, corruption, handedness,
@@ -647,9 +656,21 @@ export default function SummaryPage() {
         setSaving(true);
         setSaveError('');
         try {
-            const payload = JSON.stringify({ccm, edits: {characterName: charName}});
-            const result = await saveCharacter(payload, saveCode);
+            const sheet = currentSheet();
+            const payload = savePayload(ccm, charName, sheet);
+            let result;
+            try {
+                result = await saveCharacter(payload, saveCode);
+            } catch (err) {
+                // Someone else's character (opened by its code): keep the original, save a copy.
+                if (err?.response?.status !== 403 || !saveCode) throw err;
+                result = await saveCharacter(payload, null);
+                setSaveError(`This character belongs to another account, so it was saved as a new copy: ${result.code}.`);
+            }
+            writeSheet(sheetKey(result.code), sheet);
+            if (!saveCode) clearDraftSheet();
             setSaveCode(result.code);
+            dispatch({type: 'SET_DETAILS', payload: {_saveCode: result.code}});
         } catch (e) {
             console.error(e);
             setSaveError('Could not save the character. Please try again.');
@@ -661,9 +682,10 @@ export default function SummaryPage() {
     const handleLoad = async () => {
         if (!loadInput.trim()) return;
         try {
-            const result = await loadCharacter(loadInput.trim().toUpperCase());
+            const code = loadInput.trim().toUpperCase();
+            const result = await loadCharacter(code);
             if (result?.ccm) {
-                dispatch({type: 'RESTORE', payload: result.ccm});
+                restoreSavedCharacter(dispatch, code, result);
                 navigate('/summary');
             }
         } catch (e) {

@@ -3,6 +3,7 @@ import {useLocation, useNavigate} from 'react-router-dom';
 import {createRoom, deleteCharacter, getMyCharacters, getMyRooms, joinRoom, loadCharacter, reportError} from '../api/api';
 import {useAuth} from '../context/AuthContext';
 import {useCharacter} from '../context/CharacterContext';
+import {restoreSavedCharacter, startNewCharacter} from '../utils/savedCharacter';
 import Topbar from '../components/Topbar';
 import ErrorToast from '../components/ErrorToast';
 
@@ -55,16 +56,13 @@ export default function CabinetPage() {
     }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const newCharacter = () => {
-        dispatch({type: 'RESET'});
+        startNewCharacter(dispatch);
         navigate('/characteristics');
     };
 
     const openChar = async (code) => {
         try {
-            const raw = await loadCharacter(code);
-            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-            const ccm = parsed.ccm || parsed;
-            dispatch({type: 'RESTORE', payload: ccm});
+            restoreSavedCharacter(dispatch, code, await loadCharacter(code));
             navigate('/summary');
         } catch (err) {
             reportError(err);

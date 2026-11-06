@@ -65,6 +65,9 @@ const initialState = {
     shortTermGoal: '',
     longTermGoal: '',
     connections: '',
+    // Browser-only: the save code being edited, and when it was opened (see utils/savedCharacter.js).
+    _saveCode: null,
+    _loadedAt: null,
 };
 
 function reducer(state, action) {
