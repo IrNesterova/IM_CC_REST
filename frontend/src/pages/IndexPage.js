@@ -82,7 +82,6 @@ export default function IndexPage() {
                     <ul style={{marginBottom: '36px', listStyle: 'none', padding: 0}}>
                         {[
                             'Imperium Maledictum Character Creator',
-                            'My first Java project, written with Claude Code',
                             'Spring Boot · PostgreSQL · React',
                             'Bug report button available on every page',
                         ].map(item => (
