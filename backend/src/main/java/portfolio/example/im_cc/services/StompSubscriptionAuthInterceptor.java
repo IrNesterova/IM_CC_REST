@@ -8,6 +8,7 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
+import portfolio.example.im_cc.models.lobby.GameRoomMember;
 import portfolio.example.im_cc.repositories.AppUserRepository;
 import portfolio.example.im_cc.repositories.lobby.GameRoomMemberRepository;
 import portfolio.example.im_cc.repositories.lobby.GameRoomRepository;
@@ -57,8 +58,8 @@ public class StompSubscriptionAuthInterceptor implements ChannelInterceptor {
         }
         Long userId = resolveUserId(principal);
 
-        // You may subscribe to a room only if you actually belong to it.
-        boolean allowed = members.existsByRoomIdAndUserId(roomId, userId)
+        // You may subscribe to a room only if you actually belong to it (members who left do not).
+        boolean allowed = members.existsByRoomIdAndUserIdAndStatus(roomId, userId, GameRoomMember.MemberStatus.ACTIVE)
                 || rooms.findById(roomId)
                 .map(room -> room.getGm().getId().equals(userId))
                 .orElse(false);

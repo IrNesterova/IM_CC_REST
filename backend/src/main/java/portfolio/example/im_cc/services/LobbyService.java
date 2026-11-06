@@ -16,6 +16,7 @@ import portfolio.example.im_cc.repositories.lobby.GameRoomRepository;
 
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -49,19 +50,26 @@ public class LobbyService {
                 .orElseThrow(() -> new LobbyException(ROOM_NOT_FOUND, "No room for code " + code));
 
         boolean isGm = room.getGm().getId().equals(user.getId());
-        boolean alreadyMember = members.existsByRoomIdAndUserId(room.getId(), user.getId());
+        Optional<GameRoomMember> existing = members.findByRoomIdAndUserId(room.getId(), user.getId());
 
-        // Access gate (variant a: gated at the join endpoint).
-        // Closed room blocks NEW non-GM players; the GM and existing members pass.
-        // ASSUMES GameRoom has a `boolean open` (room.isOpen()). If you kept the status
-        // enum instead, swap this to: !room.getStatus().equals(RoomStatus.LOBBY)
-        if (!room.getStatus().equals(GameRoom.RoomStatus.LOBBY) && !isGm && !alreadyMember) {
-            throw new LobbyException(ROOM_CLOSED, "Room is closed to new players");
+        // Returning member: the row stays in the campaign history when they leave, so rejoining
+        // reactivates it instead of being a silent no-op that kept them locked out.
+        if (existing.isPresent()) {
+            GameRoomMember member = existing.get();
+            if (member.getStatus() == GameRoomMember.MemberStatus.KICKED) {
+                throw new LobbyException(ROOM_CLOSED, "You were removed from this room");
+            }
+            if (member.getStatus() == GameRoomMember.MemberStatus.LEFT) {
+                member.setStatus(GameRoomMember.MemberStatus.ACTIVE);
+                events.publishEvent(new LobbyEvent.MemberJoined(
+                        room.getId(), user.getId(), user.getDisplayName(), member.getRole()));
+            }
+            return member;
         }
 
-        // Re-joining is a no-op: return the existing membership rather than erroring.
-        if (alreadyMember) {
-            return members.findByRoomIdAndUserId(room.getId(), user.getId()).orElseThrow();
+        // Access gate: a room that is no longer in LOBBY blocks NEW players; the GM and existing members pass.
+        if (!room.getStatus().equals(GameRoom.RoomStatus.LOBBY) && !isGm) {
+            throw new LobbyException(ROOM_CLOSED, "Room is closed to new players");
         }
 
         GameRoomMember member = new GameRoomMember(room, user, GameRoomMember.MemberRole.PLAYER);
@@ -70,7 +78,7 @@ public class LobbyService {
             saved = members.save(member);
 
         } catch (DataIntegrityViolationException race) {
-            // Two concurrent joins both passed the existsBy check above (classic TOCTOU).
+            // Two concurrent joins both passed the lookup above (classic TOCTOU).
             // The DB unique constraint uq_room_user is the REAL guard — the loser lands here.
             // Recover by returning the row the winner inserted instead of surfacing an error.
             return members.findByRoomIdAndUserId(room.getId(), user.getId())
@@ -81,13 +89,17 @@ public class LobbyService {
         return saved;
     }
 
+    /** Active members and the GM may see a room; members who left or were kicked may not. */
+    private boolean canAccess(UUID roomId, Long userId) {
+        return members.existsByRoomIdAndUserIdAndStatus(roomId, userId, GameRoomMember.MemberStatus.ACTIVE)
+                || rooms.findById(roomId)
+                .map(r -> r.getGm().getId().equals(userId))
+                .orElse(false);
+    }
+
     @Transactional
     public List<GameRoomMember> roster(UUID roomId, Long requesterId) {
-        boolean allowed = members.existsByRoomIdAndUserId(roomId, requesterId)
-                || rooms.findById(roomId)
-                .map(r -> r.getGm().getId().equals(requesterId))
-                .orElse(false);
-        if (!allowed) {
+        if (!canAccess(roomId, requesterId)) {
             // ROOM_NOT_FOUND, а не FORBIDDEN: не палим даже сам факт, что комната существует
             throw new LobbyException(ROOM_NOT_FOUND, "Not a member of room " + roomId);
         }
@@ -126,8 +138,7 @@ public class LobbyService {
     public GameRoom getRoom(UUID roomId, Long requesterId) {
         GameRoom room = rooms.findById(roomId)
                 .orElseThrow(() -> new LobbyException(ROOM_NOT_FOUND, "Room " + roomId + " not found"));
-        boolean allowed = members.existsByRoomIdAndUserId(roomId, requesterId);
-        if (!allowed) throw new LobbyException(ROOM_NOT_FOUND, "Not a member of room " + roomId);
+        if (!canAccess(roomId, requesterId)) throw new LobbyException(ROOM_NOT_FOUND, "Not a member of room " + roomId);
         return room;
     }
 
@@ -146,10 +157,12 @@ public class LobbyService {
     @Transactional
     public void selectCharacter(UUID roomId, AppUser user, String characterCode) {
         GameRoomMember member = members.findByRoomIdAndUserId(roomId, user.getId())
+                .filter(m -> m.getStatus() == GameRoomMember.MemberStatus.ACTIVE)
                 .orElseThrow(() -> new LobbyException(ROOM_NOT_FOUND, "Not a member of room " + roomId));
-        CharacterSave character = characterSaves.findBySaveCode(characterCode)
+        CharacterSave character = characterSaves.findBySaveCode(characterCode == null ? "" : characterCode.toUpperCase())
                 .orElseThrow(() -> new LobbyException(MEMBER_NOT_FOUND, "Character " + characterCode + " not found"));
-        if (!character.getOwner().getId().equals(user.getId())) {
+        // Characters saved without an account have no owner and cannot be claimed by anyone.
+        if (character.getOwner() == null || !character.getOwner().getId().equals(user.getId())) {
             throw new LobbyException(NOT_GM, "Character does not belong to you");
         }
         member.setCharacter(character);

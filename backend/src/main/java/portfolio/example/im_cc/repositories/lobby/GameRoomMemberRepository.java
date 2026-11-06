@@ -12,6 +12,9 @@ import java.util.UUID;
 public interface GameRoomMemberRepository extends JpaRepository<GameRoomMember, UUID> {
     boolean existsByRoomIdAndUserId(UUID roomId, Long userId);
 
+    // Members who left (or were kicked) keep their row for history but lose access to the room.
+    boolean existsByRoomIdAndUserIdAndStatus(UUID roomId, Long userId, GameRoomMember.MemberStatus status);
+
     Optional<GameRoomMember> findByRoomIdAndUserId(UUID roomId, Long userId);
 
     long countByRoomId(UUID roomId);
