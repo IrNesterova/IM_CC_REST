@@ -1,6 +1,5 @@
 package portfolio.example.im_cc.controllers.api;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import portfolio.example.im_cc.models.patron.PatronSave;
@@ -21,13 +20,21 @@ public class PatronSaveApiController {
     private static final int CODE_LEN = 6;
     private static final SecureRandom RNG = new SecureRandom();
 
-    @Autowired private PatronSaveRepository repo;
-    @Autowired private ObjectMapper objectMapper;
+    private final PatronSaveRepository repo;
+    private final ObjectMapper objectMapper;
+
+    public PatronSaveApiController(PatronSaveRepository repo, ObjectMapper objectMapper) {
+        this.repo = repo;
+        this.objectMapper = objectMapper;
+    }
 
     @PostMapping("/save")
     public ResponseEntity<Map<String, String>> save(
             @RequestBody String data,
             @RequestParam(required = false) String code) {
+        if (!SavedJson.isObject(objectMapper, data)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Body must be a JSON object"));
+        }
 
         PatronSave ps = null;
         if (code != null && !code.isBlank()) {
@@ -56,7 +63,7 @@ public class PatronSaveApiController {
     @GetMapping("/load/{code}")
     public ResponseEntity<String> load(@PathVariable String code) {
         return repo.findBySaveCode(code.toUpperCase())
-                .map(ps -> ResponseEntity.ok(ps.getData()))
+                .map(ps -> SavedJson.response(ps.getData()))
                 .orElse(ResponseEntity.notFound().build());
     }
 

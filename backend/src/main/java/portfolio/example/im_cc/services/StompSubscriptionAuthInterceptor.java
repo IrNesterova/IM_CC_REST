@@ -24,43 +24,40 @@ public class StompSubscriptionAuthInterceptor implements ChannelInterceptor {
     private final GameRoomRepository rooms;
     private final AppUserRepository users;
 
-    // matches /topic/rooms/{uuid}
-    private static final Pattern ROOM_TOPIC =
-            Pattern.compile("^/topic/rooms/([0-9a-fA-F-]{36})$");
+    // The only destination clients may subscribe to: /topic/rooms/{uuid}
+    private static final Pattern ROOM_TOPIC = Pattern.compile(
+            "^/topic/rooms/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$");
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+        StompCommand command = accessor.getCommand();
 
-        // Only gate SUBSCRIBE. (If you later let clients SEND to /app/rooms/{id}/..., gate SEND too.)
-        if (!StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+        // Events are server-pushed and clients act through REST. A client SEND to /topic/... would be
+        // relayed by the simple broker to every subscriber, letting anyone forge room events.
+        if (StompCommand.SEND.equals(command)) {
+            throw new MessagingException("Clients cannot send messages");
+        }
+        if (!StompCommand.SUBSCRIBE.equals(command)) {
             return message;
         }
 
+        // Allowlist, not denylist: the broker treats patterns like /topic/** as wildcards,
+        // so any destination other than one exact room topic is rejected.
         String destination = accessor.getDestination();
-        if (destination == null) {
-            return message;
-        }
-
-        Matcher matcher = ROOM_TOPIC.matcher(destination);
-        if (!matcher.matches()) {
-            // not a room topic (e.g. a user-specific queue) — leave it to other rules
-            return message;
+        Matcher matcher = destination == null ? null : ROOM_TOPIC.matcher(destination);
+        if (matcher == null || !matcher.matches()) {
+            throw new MessagingException("Subscription not allowed: " + destination);
         }
         UUID roomId = UUID.fromString(matcher.group(1));
 
         Principal principal = accessor.getUser();
         if (principal == null) {
-            // With cookie-based Spring Security sessions the principal rides in on the
-            // handshake. If this is ever null, the authenticated session isn't reaching the
-            // socket — configure a HandshakeHandler / Spring Security messaging support.
             throw new MessagingException("Unauthenticated subscription to " + destination);
         }
         Long userId = resolveUserId(principal);
 
-        // THE check. You may subscribe to a room only if you actually belong to it.
-        // This is the realtime equivalent of your REST ownership checks — without it,
-        // anyone who knows a room id could read its live roster/presence stream.
+        // You may subscribe to a room only if you actually belong to it.
         boolean allowed = members.existsByRoomIdAndUserId(roomId, userId)
                 || rooms.findById(roomId)
                 .map(room -> room.getGm().getId().equals(userId))
