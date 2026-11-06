@@ -5,6 +5,7 @@ import {useCharacter} from '../context/CharacterContext';
 import Topbar from '../components/Topbar';
 import ProgressBar from '../components/ProgressBar';
 import LoadError from '../components/LoadError';
+import {withBonuses, withoutBonuses} from '../utils/characteristicBonuses';
 
 const POOL_TOTAL = 90;
 const BASE_VAL = 20;
@@ -23,9 +24,11 @@ export default function CharacteristicsPage() {
     useEffect(() => {
         getCharacteristics().then(data => {
             setChars(data);
+            // Edit the base values: origin and faction bonuses are added back on submit.
+            const base = withoutBonuses(ccm.characteristics, ccm);
             const init = {};
             data.forEach(c => {
-                init[c.name] = ccm.characteristics[c.name] || String(MIN_VAL);
+                init[c.name] = base[c.name] || String(MIN_VAL);
             });
             setValues(init);
         }).catch(err => { reportError(err); setLoadFailed(true); }).finally(() => setLoading(false));
@@ -61,7 +64,7 @@ export default function CharacteristicsPage() {
     };
 
     const handleSubmit = () => {
-        dispatch({type: 'SET_CHARACTERISTICS', payload: values});
+        dispatch({type: 'SET_CHARACTERISTICS', payload: withBonuses(values, ccm)});
         navigate('/origins');
     };
 

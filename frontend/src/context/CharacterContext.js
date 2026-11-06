@@ -70,14 +70,9 @@ const initialState = {
 function reducer(state, action) {
     switch (action.type) {
         case 'SET_CHARACTERISTICS':
-            return {
-                ...state,
-                characteristics: action.payload,
-                originPrimaryCharNames: '',
-                originSecondaryCharName: '',
-                factionPrimaryCharNames: '',
-                factionSecondaryCharName: '',
-            };
+            // The payload already includes origin and faction bonuses (see CharacteristicsPage). Their
+            // names stay, so the origin and faction pages can still remove them before re-applying.
+            return {...state, characteristics: action.payload};
         case 'SET_ORIGIN':
             return {
                 ...state,
