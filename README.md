@@ -30,6 +30,7 @@ A full-stack web application for creating characters in the **Imperium Maledictu
 - PostgreSQL running on `localhost:5432`
   - Database: `postgres`, user: `postgres`, password: `123`
 - Optional: set `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` to enable Discord login. Without them, only email/password login is available.
+- Optional: set `RABBITMQ_HOST` (plus `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`) to send bug reports through RabbitMQ. Without it, bug reports are saved straight to the database.
 
 ## Running Locally
 

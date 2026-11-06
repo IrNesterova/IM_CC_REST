@@ -20,7 +20,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import portfolio.example.im_cc.services.AppUserDetailsService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -73,18 +72,8 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        List<String> origins = new ArrayList<>(List.of(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://localhost",
-                "http://localhost:80"
-        ));
-        if (frontendUrl != null && !frontendUrl.isBlank()) {
-            origins.add(frontendUrl);
-        }
-
         CorsConfiguration c = new CorsConfiguration();
-        c.setAllowedOrigins(origins);
+        c.setAllowedOrigins(AllowedOrigins.including(frontendUrl));
         c.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         c.setAllowedHeaders(List.of("*"));
         c.setAllowCredentials(true);

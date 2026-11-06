@@ -3,9 +3,11 @@ package portfolio.example.im_cc.messaging;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
+import portfolio.example.im_cc.config.ConditionalOnRabbitMq;
 import portfolio.example.im_cc.config.RabbitMQConfig;
 
 @Component
+@ConditionalOnRabbitMq
 @RequiredArgsConstructor
 public class BugReportProducer {
 

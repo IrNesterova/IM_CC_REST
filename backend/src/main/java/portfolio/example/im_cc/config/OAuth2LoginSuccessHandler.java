@@ -48,8 +48,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String email = rawEmail == null ? null : rawEmail.toString();
         Object rawUsername = oauthUser.getAttribute("username");
         String username = rawUsername == null ? null : rawUsername.toString();
+        boolean emailVerified = Boolean.TRUE.equals(oauthUser.getAttribute("verified"));
 
-        AppUser appUser = findOrCreate(discordId, email, username);
+        AppUser appUser = findOrCreate(discordId, email, username, emailVerified);
 
         // Swap to our email-based principal so principal.getName() == email everywhere
         UserDetails userDetails = uds.loadUserByUsername(appUser.getEmail());
@@ -64,12 +65,18 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         getRedirectStrategy().sendRedirect(request, response, frontendUrl + "/cabinet?auth=discord");
     }
 
-    private AppUser findOrCreate(String discordId, String email, String username) {
+    AppUser findOrCreate(String discordId, String email, String username, boolean emailVerified) {
+        if (discordId == null) throw new IllegalStateException("Discord did not return a user id");
+
         // 1. already linked by discord id
         return users.findByDiscordId(discordId).orElseGet(() -> {
+            // Only an address Discord has verified may claim or reserve an account email. Otherwise
+            // anyone could add a victim's address to their Discord profile and log in as the victim.
+            String verifiedEmail = emailVerified && email != null ? email.toLowerCase() : null;
+
             // 2. existing email account → link it
-            if (email != null) {
-                AppUser existing = users.findByEmail(email.toLowerCase()).orElse(null);
+            if (verifiedEmail != null) {
+                AppUser existing = users.findByEmail(verifiedEmail).orElse(null);
                 if (existing != null) {
                     existing.setDiscordId(discordId);
                     return users.save(existing);
@@ -78,7 +85,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             // 3. brand new user
             AppUser u = new AppUser();
             u.setDiscordId(discordId);
-            u.setEmail(email != null ? email.toLowerCase() : discordId + "@discord.user");
+            u.setEmail(verifiedEmail != null ? verifiedEmail : discordId + "@discord.user");
             u.setDisplayName(username);
             // random unguessable password so form-login is impossible for OAuth-only accounts
             u.setPasswordHash(encoder.encode(UUID.randomUUID().toString()));
