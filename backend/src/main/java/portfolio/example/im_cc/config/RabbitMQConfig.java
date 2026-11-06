@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@ConditionalOnRabbitMq
 public class RabbitMQConfig {
 
     public static final String BUG_REPORT_QUEUE       = "bug-report.queue";
