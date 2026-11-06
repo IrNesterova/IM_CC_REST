@@ -116,6 +116,7 @@ export default function SummaryPage() {
     const toastRef = useRef(null);
     const toastDragRef = useRef(false);
     const initializedRef = useRef(false);
+    const loadedCcmRef = useRef(null);
     const [rolling, setRolling] = useState(false);
     const [rollModal, setRollModal] = useState(null);
     const [rollMode, setRollMode] = useState('normal');
@@ -186,7 +187,10 @@ export default function SummaryPage() {
             ? loadCharacter(viewCode).then(result => result?.ccm)
             : Promise.resolve(ccm);
         ccmPromise
-            .then(resolvedCcm => Promise.all([buildSummary(resolvedCcm), getPsychicDisciplines()]))
+            .then(resolvedCcm => {
+                loadedCcmRef.current = resolvedCcm;
+                return Promise.all([buildSummary(resolvedCcm), getPsychicDisciplines()]);
+            })
             .then(([d, disc]) => {
                 setData(d);
                 setDisciplines(disc);
@@ -204,6 +208,8 @@ export default function SummaryPage() {
         if (!data) return;
         const {sheet} = data;
         setCharName(sheet.characterName || '');
+        // Starting XP from rolling the origin; a stored sheet below overrides it.
+        setXpTotal(Number(loadedCcmRef.current?.originRollXp) || 0);
 
         const start = {}, adv = {};
         Object.entries(sheet.characteristics || {}).forEach(([k, v]) => {

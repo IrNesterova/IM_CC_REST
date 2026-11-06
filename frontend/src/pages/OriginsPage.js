@@ -5,6 +5,7 @@ import {useCharacter} from '../context/CharacterContext';
 import Topbar from '../components/Topbar';
 import ProgressBar from '../components/ProgressBar';
 import LoadError from '../components/LoadError';
+import {ORIGIN_ROLL_XP, findRolledOrigin, formatD100, rollD100} from '../utils/originRoll';
 
 export default function OriginsPage() {
     const [origins, setOrigins]         = useState([]);
@@ -25,6 +26,9 @@ export default function OriginsPage() {
     const [loadFailed, setLoadFailed]             = useState(false);
     const navigate  = useNavigate();
     const {ccm, dispatch, allowedSourceBooks} = useCharacter();
+    // One roll per character: rolling instead of choosing grants XP only while that origin is kept.
+    const [originRoll, setOriginRoll] = useState(() =>
+        ccm.originRollXp > 0 ? {roll: null, originId: ccm.originId} : null);
 
     useEffect(() => {
         getOrigins().then(data => {
@@ -235,6 +239,7 @@ export default function OriginsPage() {
             type: 'SET_ORIGIN',
             payload: {
                 originId: selected.id,
+                originRollXp: originRoll?.originId != null && originRoll.originId === selected.id ? ORIGIN_ROLL_XP : 0,
                 originPrimaryCharNames: primaryNames,
                 originSecondaryCharName: secondaryChar,
                 originSkillChoice,
@@ -259,6 +264,20 @@ export default function OriginsPage() {
         });
         navigate('/factions');
     };
+
+    const rollOrigin = () => {
+        if (originRoll) return;
+        const roll = rollD100();
+        const origin = findRolledOrigin(origins, roll);
+        setOriginRoll({roll, originId: origin?.id ?? null});
+        if (origin) setSelected(origin);
+    };
+
+    const rolledOrigin = originRoll ? origins.find(o => o.id === originRoll.originId) : null;
+    const rollStatus = !originRoll ? null
+        : !rolledOrigin ? 'That origin is not available, so no XP is granted.'
+        : selected?.id === rolledOrigin.id ? `Keep it to gain +${ORIGIN_ROLL_XP} XP.`
+        : 'Bonus XP lost: a different origin is selected.';
 
     const rollPositive = () => {
         if (!subtleTable) return;
@@ -318,6 +337,19 @@ export default function OriginsPage() {
                             borderBottom:'1px solid var(--border)'
                         }}>
                             Choose Origin
+                        </div>
+                        <div style={{padding: '14px 24px', borderBottom: '1px solid var(--border)'}}>
+                            <button type="button" className="action-btn secondary" onClick={rollOrigin}
+                                    disabled={!!originRoll || origins.length === 0} style={{width: '100%'}}>
+                                Roll d100 · +{ORIGIN_ROLL_XP} XP
+                            </button>
+                            {originRoll && (
+                                <div role="status" style={{marginTop: '8px', fontFamily: "'Barlow', sans-serif", fontSize: '13px', color: 'var(--ink)', lineHeight: 1.4}}>
+                                    {originRoll.roll != null ? `Rolled ${formatD100(originRoll.roll)}` : 'Rolled'}
+                                    {rolledOrigin ? `: ${rolledOrigin.name}. ` : '. '}
+                                    <span style={{color: 'var(--muted)'}}>{rollStatus}</span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Core origins */}
