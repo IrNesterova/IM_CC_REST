@@ -190,7 +190,11 @@ public class SummaryServiceImpl {
                         .filter(tc -> optionId.equals(tc.getOption_id()))
                         .forEach(tc -> talents.add(tc.getTalent().getName()));
                     if (!usePack) {
+                        // Option ids are only unique within a group: a talent option id can equal an
+                        // inventory choice id from another group, so check the choice belongs to this one.
                         factionInventoryChoiceRepository.findById(optionId)
+                            .filter(fic -> fic.getInventory() != null && fic.getFactionChoiceGroup() != null
+                                    && group.getId().equals(fic.getFactionChoiceGroup().getId()))
                             .ifPresent(fic -> {
                                 Inventory inv = fic.getInventory();
                                 String name = resolveItemName(inv, ccm.getItemVariantChoices());
