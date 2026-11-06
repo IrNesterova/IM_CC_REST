@@ -21,7 +21,13 @@ export function AuthProvider({children}) {
         refreshedRef.current = true;
         getMe()
             .then(u => { setUser(u); localStorage.setItem(STORAGE_KEY, JSON.stringify(u)); })
-            .catch(() => {});
+            .catch(err => {
+                // The session behind the cached user has expired (or the server restarted): sign out locally.
+                if (err?.response?.status === 401) {
+                    setUser(null);
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            });
     }, []);
 
     useEffect(() => {
@@ -41,7 +47,10 @@ export function AuthProvider({children}) {
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const login = async (email, password) => {
-        const u = await apiLogin(email, password);
+        const result = await apiLogin(email, password);
+        // The login response only has the email; load the full profile (id, display name) so pages
+        // that compare user.id, like the GM controls in a room, work without a reload.
+        const u = await getMe().catch(() => result);
         setUser(u);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
     };
